@@ -1,0 +1,7 @@
+{
+  "extends": "@kiwi/eslint-config",
+  "env": {
+    "jest": true,
+    "browser": true
+  }
+}

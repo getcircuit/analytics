@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "types/",
+    // Ensure that .d.ts files are created by tsc, but not .js files
+    "emitDeclarationOnly": true
+  },
+  "include": ["src/*.ts", "src/typings/**/*"]
+}
