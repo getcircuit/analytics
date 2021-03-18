@@ -1,5 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve'
 import babel from '@rollup/plugin-babel'
+import commonjs from '@rollup/plugin-commonjs'
 
 // List of extensions that can be automatically resolved
 const RESOLVABLE_EXTS = ['.ts', '.tsx', '.js']
@@ -21,6 +22,7 @@ export default {
   ],
   plugins: [
     resolve({ extensions: RESOLVABLE_EXTS }),
+    commonjs(),
     babel({
       babelHelpers: 'bundled',
       // We add the .svg extension so babel considers our transformed svg files

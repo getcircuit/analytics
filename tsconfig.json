@@ -9,6 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
+    "allowJs": true,
     // Ensure that Babel can safely transpile files in the TypeScript project
     "isolatedModules": true
   },

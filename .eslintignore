@@ -1,6 +1,4 @@
 /esm/
 /cjs/
 /types/
-/storybook-static/
 /coverage/
-!.storybook/
