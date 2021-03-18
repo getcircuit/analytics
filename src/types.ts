@@ -33,30 +33,16 @@ export type IdentifyOptions = {
   [key: string]: unknown
 }
 
-type PluginTrackEvent = (opts: TrackEventOptions) => MaybePromise<unknown>
-
-type PluginTrackError = (opts: TrackErrorOptions) => MaybePromise<unknown>
-
-type PluginIdentify = (
-  opts: IdentifyOptions & { hash?: string },
-) => MaybePromise<unknown>
-
-type PluginAnonymize = (options?: AnonymizeOptions) => MaybePromise<unknown>
-
-type PluginTrackPageview = (opts: PageviewOptions) => MaybePromise<unknown>
-
-type PluginInitialize = () => MaybePromise<unknown>
-
-type PluginDestroy = () => MaybePromise<unknown>
-
 type ServiceMethods = {
-  initialize: PluginInitialize
-  destroy?: PluginDestroy
-  error?: PluginTrackError
-  pageview?: PluginTrackPageview
-  event?: PluginTrackEvent
-  identify?: PluginIdentify
-  anonymize?: PluginAnonymize
+  initialize: () => MaybePromise<unknown>
+  destroy?: () => MaybePromise<unknown>
+  error?: (opts: TrackErrorOptions) => MaybePromise<unknown>
+  pageview?: (opts?: PageviewOptions | null) => MaybePromise<unknown>
+  event?: (opts: TrackEventOptions) => MaybePromise<unknown>
+  identify?: (
+    opts: IdentifyOptions & { hash?: string },
+  ) => MaybePromise<unknown>
+  anonymize?: (options?: AnonymizeOptions) => MaybePromise<unknown>
 }
 
 export type ServiceTrackMethod = keyof Exclude<

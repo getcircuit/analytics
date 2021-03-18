@@ -3,13 +3,13 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable node/global-require */
 
-import { servicePlugin } from '../plugin'
+import { createPlugin } from '../plugin'
 
 type Options = {
   pixelId: string
 }
 
-const facebookPixel = servicePlugin(({ pixelId }: Options) => {
+const facebookPixel = createPlugin(({ pixelId }: Options) => {
   return {
     async initialize() {
       if (!window.fbq) {

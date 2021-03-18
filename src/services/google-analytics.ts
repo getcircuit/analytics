@@ -2,7 +2,7 @@
 // @ts-nocheck
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable node/global-require */
-import { servicePlugin } from '../plugin'
+import { createPlugin } from '../plugin'
 
 type Options = {
   trackingId: string
@@ -20,7 +20,7 @@ function gaSend(options: Record<string, unknown>): Promise<void> {
   })
 }
 
-const googleAnalytics = servicePlugin(({ trackingId, debug }: Options) => {
+const googleAnalytics = createPlugin(({ trackingId, debug }: Options) => {
   return {
     async initialize() {
       if (!window.ga) {

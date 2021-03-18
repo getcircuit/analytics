@@ -4,7 +4,7 @@ type PluginCommonOptions = {
   explicitUseOnly?: ServiceTrackMethod[]
 }
 
-export function servicePlugin<T>(factory: (options: T) => Service) {
+export function createPlugin<T>(factory: (options: T) => Service) {
   return (options: T & PluginCommonOptions = {} as T) => {
     const service = factory(options)
 
@@ -16,7 +16,9 @@ export function servicePlugin<T>(factory: (options: T) => Service) {
   }
 }
 
-export function createPlugins<T extends Record<string, Service>>(services: T) {
+export function getServicePlugins<T extends Record<string, Service>>(
+  services: T,
+) {
   return Object.entries(services).map(([id, service]) => {
     const plugin = service as ServicePlugin
 
