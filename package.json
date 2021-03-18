@@ -13,16 +13,17 @@
     "esm/"
   ],
   "scripts": {
-    "clear": "npx rimraf ./{esm,cjs}/",
+    "clear": "npx rimraf ./{esm,cjs,types}/",
     "prebuild": "npm run clear",
     "build:types": "tsc -p tsconfig.types.json",
-    "build": "rollup -c",
+    "build:js": "rollup -c",
+    "build": "npm run build:js && npm run build:types",
     "type-check": "tsc --noEmit",
     "lint": "eslint --ext js,jsx,ts,tsx .",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json}\"",
     "test": "jest",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s -r 1 && git add CHANGELOG.md",
-    "prepublishOnly": "npm run test && npm run build && npm run build:types",
+    "prepublishOnly": "npm run test && npm run build",
     "postpublish": "npm run clear"
   },
   "commitlint": {
