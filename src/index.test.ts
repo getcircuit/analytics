@@ -204,7 +204,7 @@ test('should not call methods defined on "explicitUseOnly"', async () => {
   expect(analytics.services.identify.identify).toHaveBeenCalledTimes(0)
 })
 
-test('should call methods defined on "explicitUseOnly" when explicitly defined', async () => {
+test('should only call methods defined via "services"', async () => {
   const analytics = Analytics({
     services: {
       event: pluginSample({ explicitUseOnly: ['event'] }),
@@ -213,19 +213,19 @@ test('should call methods defined on "explicitUseOnly" when explicitly defined',
     },
   })
 
-  await analytics.event({ label: 'potato' }, { services: { event: true } })
-  await analytics.pageview(null, { services: { pageview: true } })
-  await analytics.identify({}, { services: { identify: true } })
+  await analytics.event({ label: 'potato' }, { services: ['event'] })
+  await analytics.pageview(null, { services: ['pageview'] })
+  await analytics.identify({}, { services: ['identify'] })
 
   expect(analytics.services.event.event).toHaveBeenCalledTimes(1)
-  expect(analytics.services.pageview.event).toHaveBeenCalledTimes(1)
-  expect(analytics.services.identify.event).toHaveBeenCalledTimes(1)
+  expect(analytics.services.pageview.event).toHaveBeenCalledTimes(0)
+  expect(analytics.services.identify.event).toHaveBeenCalledTimes(0)
 
-  expect(analytics.services.event.pageview).toHaveBeenCalledTimes(1)
+  expect(analytics.services.event.pageview).toHaveBeenCalledTimes(0)
   expect(analytics.services.pageview.pageview).toHaveBeenCalledTimes(1)
-  expect(analytics.services.identify.pageview).toHaveBeenCalledTimes(1)
+  expect(analytics.services.identify.pageview).toHaveBeenCalledTimes(0)
 
-  expect(analytics.services.event.identify).toHaveBeenCalledTimes(1)
-  expect(analytics.services.pageview.identify).toHaveBeenCalledTimes(1)
+  expect(analytics.services.event.identify).toHaveBeenCalledTimes(0)
+  expect(analytics.services.pageview.identify).toHaveBeenCalledTimes(0)
   expect(analytics.services.identify.identify).toHaveBeenCalledTimes(1)
 })
