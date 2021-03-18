@@ -1,188 +1,231 @@
-import { Analytics } from '.'
-import type { ServicePluginFactory } from './types'
+import { Analytics, servicePlugin } from './index'
 
-const sampleService: ServicePluginFactory<unknown> = () => {
+const pluginSample = servicePlugin(() => {
   return {
     initialize: jest.fn(),
-    track: jest.fn(),
+    destroy: jest.fn(),
+    event: jest.fn(),
     identify: jest.fn(),
     anonymize: jest.fn(),
-    page: jest.fn(),
+    pageview: jest.fn(),
   }
-}
+})
 
-describe('initializing', () => {
-  it('initializes all plugins', async () => {
-    const samepleServicePlugin1 = sampleService({
-      trackingId: 'potato',
-    })
+test('initializes all plugins', async () => {
+  const analytics = Analytics({
+    services: {
+      sampleService1: pluginSample(),
+      sampleService2: pluginSample(),
+    },
+  })
 
-    const samepleServicePlugin2 = sampleService({
-      trackingId: 'potato2',
-    })
+  expect(analytics.services.sampleService1.ctx.loaded).toBe(false)
+  expect(analytics.services.sampleService2.ctx.loaded).toBe(false)
 
-    const analytics = Analytics({
-      services: {
-        sampleService1: samepleServicePlugin1,
-        sampleService2: samepleServicePlugin2,
+  await analytics.initialize()
+
+  expect(analytics.services.sampleService1.initialize).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService2.initialize).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService1.ctx.loaded).toBe(true)
+  expect(analytics.services.sampleService2.ctx.loaded).toBe(true)
+})
+
+test('lazily initialize plugins that implement the executed method', async () => {
+  const analytics = Analytics({
+    services: {
+      identifyService: {
+        initialize: jest.fn(),
+        identify: jest.fn(),
       },
-    })
+      eventService: {
+        initialize: jest.fn(),
+        event: jest.fn(),
+      },
+      pageviewService: {
+        initialize: jest.fn(),
+        pageview: jest.fn(),
+      },
+    },
+  })
 
-    expect(samepleServicePlugin1.loaded).toBe(false)
-    expect(samepleServicePlugin2.loaded).toBe(false)
+  await analytics.event({ label: 'click' })
 
-    await analytics.initialize()
+  expect(analytics.services.identifyService.ctx.loaded).toBe(false)
+  expect(analytics.services.pageviewService.ctx.loaded).toBe(false)
+  expect(analytics.services.eventService.ctx.loaded).toBe(true)
 
-    expect(samepleServicePlugin1.initialize).toHaveBeenCalledTimes(1)
-    expect(samepleServicePlugin2.initialize).toHaveBeenCalledTimes(1)
-    expect(samepleServicePlugin1.loaded).toBe(true)
-    expect(samepleServicePlugin2.loaded).toBe(true)
+  await analytics.identify({})
+  expect(analytics.services.identifyService.ctx.loaded).toBe(true)
+  expect(analytics.services.pageviewService.ctx.loaded).toBe(false)
+
+  await analytics.pageview({})
+  expect(analytics.services.pageviewService.ctx.loaded).toBe(true)
+})
+
+test('destroy all plugins', async () => {
+  const analytics = Analytics({
+    services: {
+      sampleService1: pluginSample(),
+      sampleService2: pluginSample(),
+    },
+  })
+
+  await analytics.initialize()
+
+  expect(analytics.services.sampleService1.ctx.loaded).toBe(true)
+  expect(analytics.services.sampleService2.ctx.loaded).toBe(true)
+
+  await analytics.destroy()
+
+  expect(analytics.services.sampleService1.destroy).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService2.destroy).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService1.ctx.loaded).toBe(false)
+  expect(analytics.services.sampleService2.ctx.loaded).toBe(false)
+})
+
+test('sends tracked event to all registered plugins', async () => {
+  const analytics = Analytics({
+    services: {
+      sampleService1: pluginSample(),
+      sampleService2: pluginSample(),
+    },
+  })
+
+  await analytics.event({
+    label: 'click',
+  })
+
+  expect(analytics.services.sampleService1.event).toHaveBeenCalledWith({
+    label: 'click',
+  })
+  expect(analytics.services.sampleService2.event).toHaveBeenCalledWith({
+    label: 'click',
   })
 })
 
-describe('tracking events', () => {
-  it('sends tracked event to all registered plugins', async () => {
-    const samepleServicePlugin1 = sampleService({
-      trackingId: 'potato',
-    })
+test('sends page view to all registered plugins', async () => {
+  const analytics = Analytics({
+    services: {
+      sampleService1: pluginSample(),
+      sampleService2: pluginSample(),
+    },
+  })
 
-    const samepleServicePlugin2 = sampleService({
-      trackingId: 'potato2',
-    })
+  analytics.initialize()
+  await analytics.pageview()
 
-    const analytics = Analytics({
-      services: {
-        sampleService1: samepleServicePlugin1,
-        sampleService2: samepleServicePlugin2,
-      },
-    })
-
-    analytics.initialize()
-    await analytics.track({
-      event: 'click',
-    })
-
-    expect(samepleServicePlugin1.track).toHaveBeenCalledWith({
-      payload: { event: 'click' },
-    })
-    expect(samepleServicePlugin2.track).toHaveBeenCalledWith({
-      payload: { event: 'click' },
-    })
+  expect(analytics.services.sampleService1.pageview).toHaveBeenCalledWith({
+    page: '/',
+  })
+  expect(analytics.services.sampleService2.pageview).toHaveBeenCalledWith({
+    page: '/',
   })
 })
 
-describe('sending page views', () => {
-  it('sends page view to all registered plugins', async () => {
-    const samepleServicePlugin1 = sampleService({
-      trackingId: 'potato',
-    })
-
-    const samepleServicePlugin2 = sampleService({
-      trackingId: 'potato2',
-    })
-
-    const analytics = Analytics({
-      services: {
-        sampleService1: samepleServicePlugin1,
-        sampleService2: samepleServicePlugin2,
-      },
-    })
-
-    analytics.initialize()
-    await analytics.page()
-
-    expect(samepleServicePlugin1.page).toHaveBeenCalledWith({
-      payload: { url: '/' },
-    })
-    expect(samepleServicePlugin2.page).toHaveBeenCalledWith({
-      payload: { url: '/' },
-    })
+test('can override url when sending a page view', async () => {
+  const analytics = Analytics({
+    services: {
+      sampleService1: pluginSample(),
+      sampleService2: pluginSample(),
+    },
   })
 
-  it('can override url when sending a page view', async () => {
-    const samepleServicePlugin1 = sampleService({
-      trackingId: 'potato',
-    })
+  await analytics.pageview({ page: '/potato' })
 
-    const samepleServicePlugin2 = sampleService({
-      trackingId: 'potato2',
-    })
-
-    const analytics = Analytics({
-      services: {
-        sampleService1: samepleServicePlugin1,
-        sampleService2: samepleServicePlugin2,
-      },
-    })
-
-    analytics.initialize()
-    await analytics.page({
-      url: '/potato',
-    })
-
-    expect(samepleServicePlugin1.page).toHaveBeenCalledWith({
-      payload: { url: '/potato' },
-    })
-    expect(samepleServicePlugin2.page).toHaveBeenCalledWith({
-      payload: { url: '/potato' },
-    })
+  expect(analytics.services.sampleService1.pageview).toHaveBeenCalledWith({
+    page: '/potato',
+  })
+  expect(analytics.services.sampleService2.pageview).toHaveBeenCalledWith({
+    page: '/potato',
   })
 })
 
-describe('identifying', () => {
-  it('delegates identify to plugins', async () => {
-    const samepleServicePlugin1 = sampleService({
-      trackingId: 'potato',
-    })
-
-    const samepleServicePlugin2 = sampleService({
-      trackingId: 'potato2',
-    })
-
-    const analytics = Analytics({
-      services: {
-        sampleService1: samepleServicePlugin1,
-        sampleService2: samepleServicePlugin2,
-      },
-    })
-
-    analytics.initialize()
-    await analytics.identify({
-      userId: 'potato',
-    })
-
-    expect(samepleServicePlugin1.identify).toHaveBeenCalledWith({
-      payload: { userId: 'potato' },
-    })
-    expect(samepleServicePlugin2.identify).toHaveBeenCalledWith({
-      payload: { userId: 'potato' },
-    })
+test('delegates identify to plugins', async () => {
+  const analytics = Analytics({
+    services: {
+      sampleService1: pluginSample(),
+      sampleService2: pluginSample(),
+    },
   })
 
-  it('anonymizes a user', async () => {
-    const samepleServicePlugin1 = sampleService({
-      trackingId: 'potato',
-    })
-
-    const samepleServicePlugin2 = sampleService({
-      trackingId: 'potato2',
-    })
-
-    const analytics = Analytics({
-      services: {
-        sampleService1: samepleServicePlugin1,
-        sampleService2: samepleServicePlugin2,
-      },
-    })
-
-    analytics.initialize()
-    await analytics.anonymize()
-
-    expect(samepleServicePlugin1.identify).toHaveBeenCalledWith({
-      payload: { userId: null },
-    })
-    expect(samepleServicePlugin2.identify).toHaveBeenCalledWith({
-      payload: { userId: null },
-    })
+  await analytics.identify({
+    userId: 'potato',
   })
+
+  expect(analytics.services.sampleService1.identify).toHaveBeenCalledWith({
+    userId: 'potato',
+  })
+  expect(analytics.services.sampleService2.identify).toHaveBeenCalledWith({
+    userId: 'potato',
+  })
+})
+
+test('anonymizes a user', async () => {
+  const analytics = Analytics({
+    services: {
+      sampleService1: pluginSample(),
+      sampleService2: pluginSample(),
+    },
+  })
+
+  await analytics.anonymize()
+
+  expect(analytics.services.sampleService1.identify).toHaveBeenCalledWith({
+    userId: null,
+  })
+  expect(analytics.services.sampleService2.identify).toHaveBeenCalledWith({
+    userId: null,
+  })
+})
+
+test('should not call methods defined on "explicitUseOnly"', async () => {
+  const analytics = Analytics({
+    services: {
+      event: pluginSample({ explicitUseOnly: ['event'] }),
+      pageview: pluginSample({ explicitUseOnly: ['pageview'] }),
+      identify: pluginSample({ explicitUseOnly: ['identify'] }),
+    },
+  })
+
+  await analytics.event({ label: 'potato' })
+  await analytics.pageview()
+  await analytics.identify({})
+
+  expect(analytics.services.event.event).toHaveBeenCalledTimes(0)
+  expect(analytics.services.pageview.event).toHaveBeenCalledTimes(1)
+  expect(analytics.services.identify.event).toHaveBeenCalledTimes(1)
+
+  expect(analytics.services.event.pageview).toHaveBeenCalledTimes(1)
+  expect(analytics.services.pageview.pageview).toHaveBeenCalledTimes(0)
+  expect(analytics.services.identify.pageview).toHaveBeenCalledTimes(1)
+
+  expect(analytics.services.event.identify).toHaveBeenCalledTimes(1)
+  expect(analytics.services.pageview.identify).toHaveBeenCalledTimes(1)
+  expect(analytics.services.identify.identify).toHaveBeenCalledTimes(0)
+})
+
+test('should call methods defined on "explicitUseOnly" when explicitly defined', async () => {
+  const analytics = Analytics({
+    services: {
+      event: pluginSample({ explicitUseOnly: ['event'] }),
+      pageview: pluginSample({ explicitUseOnly: ['pageview'] }),
+      identify: pluginSample({ explicitUseOnly: ['identify'] }),
+    },
+  })
+
+  await analytics.event({ label: 'potato' }, { services: { event: true } })
+  await analytics.pageview(null, { services: { pageview: true } })
+  await analytics.identify({}, { services: { identify: true } })
+
+  expect(analytics.services.event.event).toHaveBeenCalledTimes(1)
+  expect(analytics.services.pageview.event).toHaveBeenCalledTimes(1)
+  expect(analytics.services.identify.event).toHaveBeenCalledTimes(1)
+
+  expect(analytics.services.event.pageview).toHaveBeenCalledTimes(1)
+  expect(analytics.services.pageview.pageview).toHaveBeenCalledTimes(1)
+  expect(analytics.services.identify.pageview).toHaveBeenCalledTimes(1)
+
+  expect(analytics.services.event.identify).toHaveBeenCalledTimes(1)
+  expect(analytics.services.pageview.identify).toHaveBeenCalledTimes(1)
+  expect(analytics.services.identify.identify).toHaveBeenCalledTimes(1)
 })

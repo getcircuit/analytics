@@ -4,7 +4,9 @@ module.exports = {
     [
       '@babel/preset-env',
       {
-        targets: { node: 'current' },
+        bugfixes: true,
+        loose: true,
+        targets: { esmodules: true },
       },
     ],
   ],

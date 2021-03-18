@@ -1,31 +1,84 @@
-export type PluginTrack = (args: {
-  payload: { event: string; properties?: Record<string, unknown> }
-}) => Promise<void>
+type MaybePromise<T> = Promise<T> | T
 
-export type PluginIdentify = (args: {
-  payload: { userId?: string | null; anonymousId?: string; traits?: unknown }
-}) => Promise<void>
-
-export type PluginAnonymize = (args?: { anonymousId?: string }) => Promise<void>
-
-export type PluginPage = (args: {
-  payload: { url: string; properties?: Record<string, unknown> }
-}) => Promise<void>
-
-export type PluginInitialize = () => Promise<void>
-
-export type ServicePlugin = {
-  initialize: PluginInitialize
-  page?: PluginPage
-  track?: PluginTrack
-  identify?: PluginIdentify
-  anonymize?: PluginAnonymize
-  loaded?: boolean
+export type TrackEventOptions = {
+  label: string
+  [key: string]: unknown
 }
 
-export type ServicePluginFactory<T> = (opts: T) => ServicePlugin
+export type PageviewOptions = {
+  page?: string
+  location?: string
+  title?: string
+}
 
-export type AnalyticsWrapperOptions = {
-  services: Record<string, ServicePlugin>
+export type TrackErrorOptions = {
+  error: string
+  [key: string]: unknown
+}
+
+export type AnonymizeOptions = {
+  anonymousId?: string
+}
+
+export type IdentifyOptions = {
+  id?: string
+  uid?: string
+  phone?: string
+  userId?: string
+  distinctId?: string
+  displayName?: string
+  fullName?: string
+  name?: string
+  email?: string
+  [key: string]: unknown
+}
+
+type PluginTrackEvent = (opts: TrackEventOptions) => MaybePromise<unknown>
+
+type PluginTrackError = (opts: TrackErrorOptions) => MaybePromise<unknown>
+
+type PluginIdentify = (
+  opts: IdentifyOptions & { hash?: string },
+) => MaybePromise<unknown>
+
+type PluginAnonymize = (options?: AnonymizeOptions) => MaybePromise<unknown>
+
+type PluginTrackPageview = (opts: PageviewOptions) => MaybePromise<unknown>
+
+type PluginInitialize = () => MaybePromise<unknown>
+
+type PluginDestroy = () => MaybePromise<unknown>
+
+type ServiceMethods = {
+  initialize: PluginInitialize
+  destroy?: PluginDestroy
+  error?: PluginTrackError
+  pageview?: PluginTrackPageview
+  event?: PluginTrackEvent
+  identify?: PluginIdentify
+  anonymize?: PluginAnonymize
+}
+
+export type ServiceTrackMethod = keyof Exclude<
+  ServiceMethods,
+  'initialize' | 'destroy'
+>
+
+export type Service = ServiceMethods & {
+  explicitUseOnly?: ServiceTrackMethod[]
+}
+
+export type ServicePlugin = Service & {
+  id: string
+  ctx: {
+    loaded?: boolean
+    loadPromise?: Promise<unknown>
+  }
+}
+
+export type AnalyticsWrapperOptions<T> = {
+  services: T
   debug?: boolean
+  /** Generate an unique id from a user */
+  parseUser?: (user: unknown) => IdentifyOptions
 }
