@@ -11,11 +11,13 @@ import type {
 function Analytics<ServiceMap extends Record<string, Service>>(
   options: AnalyticsWrapperOptions<ServiceMap>,
 ) {
+  type ServiceList = Array<keyof ServiceMap>
+
   const plugins = getServicePlugins(options.services)
 
   function event(
     eventArgs: TrackEventOptions,
-    { services }: { services?: Record<string, unknown> } = {},
+    { services }: { services?: ServiceList } = {},
   ) {
     if (options.debug) {
       console.info(`Sending event: ${JSON.stringify(eventArgs)}`)
@@ -23,11 +25,9 @@ function Analytics<ServiceMap extends Record<string, Service>>(
 
     return Promise.allSettled(
       plugins.map(async (plugin) => {
-        if (plugin.event == null || services?.[plugin.id] === false) return
-        if (
-          plugin.explicitUseOnly?.includes('event') &&
-          services?.[plugin.id] !== true
-        ) {
+        if (plugin.event == null) return
+        if (services != null && !services?.includes(plugin.id)) return
+        if (services == null && plugin.explicitUseOnly?.includes('event')) {
           return
         }
 
@@ -41,7 +41,7 @@ function Analytics<ServiceMap extends Record<string, Service>>(
 
   function pageview(
     args?: PageviewOptions | null,
-    { services }: { services?: Record<string, unknown> } = {},
+    { services }: { services?: ServiceList } = {},
   ) {
     const pageviewArgs = {
       page: document.location.pathname,
@@ -54,11 +54,9 @@ function Analytics<ServiceMap extends Record<string, Service>>(
 
     return Promise.allSettled(
       plugins.map(async (plugin) => {
-        if (plugin.pageview == null || services?.[plugin.id] === false) return
-        if (
-          plugin.explicitUseOnly?.includes('pageview') &&
-          services?.[plugin.id] !== true
-        ) {
+        if (plugin.pageview == null) return
+        if (services != null && !services?.includes(plugin.id)) return
+        if (services == null && plugin.explicitUseOnly?.includes('pageview')) {
           return
         }
 
@@ -72,7 +70,7 @@ function Analytics<ServiceMap extends Record<string, Service>>(
 
   function identify(
     user: unknown,
-    { services }: { services?: Record<string, unknown> } = {},
+    { services }: { services?: ServiceList } = {},
   ) {
     const userArgs = options.parseUser?.(user) ?? (user as IdentifyOptions)
 
@@ -82,11 +80,9 @@ function Analytics<ServiceMap extends Record<string, Service>>(
 
     return Promise.allSettled(
       plugins.map(async (plugin) => {
-        if (plugin.identify == null || services?.[plugin.id] === false) return
-        if (
-          plugin.explicitUseOnly?.includes('identify') &&
-          services?.[plugin.id] !== true
-        ) {
+        if (plugin.identify == null) return
+        if (services != null && !services?.includes(plugin.id)) return
+        if (services == null && plugin.explicitUseOnly?.includes('identify')) {
           return
         }
 
