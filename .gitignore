@@ -84,13 +84,7 @@ out
 .yarn/install-state.gz
 .pnp.*
 
-# storybook generated
-storybook-static/
-
 # build artifact
 /cjs/
 /esm/
 /types/
-/icons/
-/utils/
-/hooks/
