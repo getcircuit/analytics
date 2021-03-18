@@ -39,9 +39,7 @@ type ServiceMethods = {
   error?: (opts: TrackErrorOptions) => MaybePromise<unknown>
   pageview?: (opts?: PageviewOptions | null) => MaybePromise<unknown>
   event?: (opts: TrackEventOptions) => MaybePromise<unknown>
-  identify?: (
-    opts: IdentifyOptions & { hash?: string },
-  ) => MaybePromise<unknown>
+  identify?: (opts: IdentifyOptions) => MaybePromise<unknown>
   anonymize?: (options?: AnonymizeOptions) => MaybePromise<unknown>
 }
 
