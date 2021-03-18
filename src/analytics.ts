@@ -1,4 +1,4 @@
-import { createPlugins, destroyPlugin, initializePlugin } from './plugin'
+import { getServicePlugins, destroyPlugin, initializePlugin } from './plugin'
 import type {
   AnalyticsWrapperOptions,
   IdentifyOptions,
@@ -11,12 +11,16 @@ import type {
 function Analytics<ServiceMap extends Record<string, Service>>(
   options: AnalyticsWrapperOptions<ServiceMap>,
 ) {
-  const plugins = createPlugins(options.services)
+  const plugins = getServicePlugins(options.services)
 
   function event(
-    eventOptions: TrackEventOptions,
+    eventArgs: TrackEventOptions,
     { services }: { services?: Record<string, unknown> } = {},
   ) {
+    if (options.debug) {
+      console.info(`Sending event: ${JSON.stringify(eventArgs)}`)
+    }
+
     return Promise.allSettled(
       plugins.map(async (plugin) => {
         if (plugin.event == null || services?.[plugin.id] === false) return
@@ -30,15 +34,24 @@ function Analytics<ServiceMap extends Record<string, Service>>(
         // istanbul ignore else
         if (!plugin.ctx.loaded) await initializePlugin(plugin)
 
-        return plugin.event(eventOptions)
+        return plugin.event(eventArgs)
       }),
     )
   }
 
   function pageview(
-    pageviewOptions?: PageviewOptions | null,
+    args?: PageviewOptions | null,
     { services }: { services?: Record<string, unknown> } = {},
   ) {
+    const pageviewArgs = {
+      page: document.location.pathname,
+      ...args,
+    }
+
+    if (options.debug) {
+      console.info(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
+    }
+
     return Promise.allSettled(
       plugins.map(async (plugin) => {
         if (plugin.pageview == null || services?.[plugin.id] === false) return
@@ -52,10 +65,7 @@ function Analytics<ServiceMap extends Record<string, Service>>(
         // istanbul ignore else
         if (!plugin.ctx.loaded) await initializePlugin(plugin)
 
-        return plugin.pageview({
-          page: document.location.pathname,
-          ...pageviewOptions,
-        })
+        return plugin.pageview(pageviewArgs)
       }),
     )
   }
@@ -64,7 +74,11 @@ function Analytics<ServiceMap extends Record<string, Service>>(
     user: unknown,
     { services }: { services?: Record<string, unknown> } = {},
   ) {
-    const userOptions = options.parseUser?.(user) ?? (user as IdentifyOptions)
+    const userArgs = options.parseUser?.(user) ?? (user as IdentifyOptions)
+
+    if (options.debug) {
+      console.info(`Identifying user: ${JSON.stringify(userArgs)}`)
+    }
 
     return Promise.allSettled(
       plugins.map(async (plugin) => {
@@ -79,7 +93,7 @@ function Analytics<ServiceMap extends Record<string, Service>>(
         // istanbul ignore else
         if (!plugin.ctx.loaded) await initializePlugin(plugin)
 
-        return plugin.identify(userOptions)
+        return plugin.identify(userArgs)
       }),
     )
   }
