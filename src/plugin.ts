@@ -16,7 +16,9 @@ export function createPlugin<T>(factory: (options: T) => Service) {
   }
 }
 
-export function wrapPlugins<T extends Record<string, Service>>(services: T) {
+export function getServicePlugins<T extends Record<string, Service>>(
+  services: T,
+) {
   return Object.entries(services).map(([id, service]) => {
     const plugin = service as ServicePlugin
 
