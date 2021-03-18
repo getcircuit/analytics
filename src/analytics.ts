@@ -1,4 +1,4 @@
-import { wrapPlugins, destroyPlugin, initializePlugin } from './plugin'
+import { getServicePlugins, destroyPlugin, initializePlugin } from './plugin'
 import type {
   AnalyticsWrapperOptions,
   IdentifyOptions,
@@ -11,7 +11,7 @@ import type {
 function Analytics<ServiceMap extends Record<string, Service>>(
   options: AnalyticsWrapperOptions<ServiceMap>,
 ) {
-  const plugins = wrapPlugins(options.services)
+  const plugins = getServicePlugins(options.services)
 
   function event(
     eventOptions: TrackEventOptions,
