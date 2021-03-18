@@ -6,5 +6,6 @@
     // Ensure that .d.ts files are created by tsc, but not .js files
     "emitDeclarationOnly": true
   },
-  "include": ["src/*.ts", "src/typings/**/*"]
+  "include": ["src/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }
