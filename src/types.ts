@@ -18,10 +18,6 @@ export type TrackErrorOptions = {
   [key: string]: unknown
 }
 
-export type AnonymizeOptions = {
-  anonymousId?: string
-}
-
 export type IdentifyOptions = {
   id?: string
   fullName?: string
@@ -35,7 +31,7 @@ export type ServiceMethods = {
   pageview?: (opts: PageviewOptions) => MaybePromise<unknown>
   event?: (opts: TrackEventOptions) => MaybePromise<unknown>
   identify?: (opts: IdentifyOptions) => MaybePromise<unknown>
-  anonymize?: (options?: AnonymizeOptions) => MaybePromise<unknown>
+  anonymize?: () => MaybePromise<unknown>
 } & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: (...args: any[]) => any
