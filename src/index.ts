@@ -1,5 +1,6 @@
-export { Analytics } from './analytics'
-export { createPlugin } from './plugin'
+export { Analytics } from './modules/analytics'
+export { createPlugin } from './modules/plugin'
 
-export { facebookPixel } from './services/facebook'
-export { googleAnalytics } from './services/google-analytics'
+export { facebookPixel } from './services/facebook/plugin'
+export { googleAnalytics } from './services/google-analytics/plugin'
+export { fullstory } from './services/fullstory/plugin'
