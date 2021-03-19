@@ -10,7 +10,7 @@ type Options = {
   apiKey: string
 }
 
-const amplitude = createPlugin('facebook-pixel', ({ apiKey }: Options) => {
+const amplitude = createPlugin('amplitude', ({ apiKey }: Options, context) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let sdk: any
 
@@ -35,11 +35,8 @@ const amplitude = createPlugin('facebook-pixel', ({ apiKey }: Options) => {
   }
 
   function identify({ id, uid, phone, email, displayName }: IdentifyOptions) {
-    // todo
-    // const appVersion = getAppVersion()
-
     sdk.setUserId(id)
-    // sdk.setVersionName(appVersion)
+    sdk.setVersionName(context.appVersion)
 
     return trackAttributes({
       id,

@@ -1,6 +1,4 @@
 import type {
-  AnalyticsWrapperContext,
-  ServiceMethods,
   ServicePlugin,
   PluginFactory,
   PluginImplementation,
