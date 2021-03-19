@@ -1,3 +1,7 @@
+## [0.0.6](https://github.com/getcircuit/analytics/compare/v0.0.5...v0.0.6) (2021-03-19)
+
+
+
 ## [0.0.5](https://github.com/getcircuit/analytics/compare/v0.0.2...v0.0.5) (2021-03-18)
 
 

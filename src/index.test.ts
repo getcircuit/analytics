@@ -1,22 +1,32 @@
-import { Analytics, servicePlugin } from './index'
+import { Analytics, createPlugin } from './index'
+import type { Service } from './types'
 
-const pluginSample = servicePlugin(() => {
-  return {
-    load: jest.fn(),
-    unload: jest.fn(),
-    event: jest.fn(),
-    identify: jest.fn(),
-    anonymize: jest.fn(),
-    pageview: jest.fn(),
-  }
-})
+function getMockPlugin<Id extends string>({
+  id,
+  options,
+  methods,
+}: {
+  id: Id
+  options?: Record<string, unknown>
+  methods?: string[]
+}) {
+  return createPlugin<Id>(id, () => {
+    if (methods == null) {
+      methods = ['event', 'pageview', 'identify', 'anonymize', 'error']
+    }
+
+    return (Object.fromEntries(
+      ['load', 'unload', ...methods].map((name) => [name, jest.fn()]),
+    ) as unknown) as Service
+  })(options)
+}
 
 test('load all services', async () => {
   const analytics = Analytics({
-    services: {
-      sampleService1: pluginSample(),
-      sampleService2: pluginSample(),
-    },
+    services: [
+      getMockPlugin({ id: 'sampleService1' }),
+      getMockPlugin({ id: 'sampleService2' }),
+    ],
   })
 
   expect(analytics.services.sampleService1.ctx.loaded).toBe(false)
@@ -32,20 +42,11 @@ test('load all services', async () => {
 
 test('lazily initialize plugins that implement the executed method', async () => {
   const analytics = Analytics({
-    services: {
-      identifyService: {
-        load: jest.fn(),
-        identify: jest.fn(),
-      },
-      eventService: {
-        load: jest.fn(),
-        event: jest.fn(),
-      },
-      pageviewService: {
-        load: jest.fn(),
-        pageview: jest.fn(),
-      },
-    },
+    services: [
+      getMockPlugin({ id: 'identifyService', methods: ['identify'] }),
+      getMockPlugin({ id: 'eventService', methods: ['event'] }),
+      getMockPlugin({ id: 'pageviewService', methods: ['pageview'] }),
+    ],
   })
 
   await analytics.event({ label: 'click' })
@@ -64,10 +65,10 @@ test('lazily initialize plugins that implement the executed method', async () =>
 
 test('unload all services', async () => {
   const analytics = Analytics({
-    services: {
-      sampleService1: pluginSample(),
-      sampleService2: pluginSample(),
-    },
+    services: [
+      getMockPlugin({ id: 'sampleService1' }),
+      getMockPlugin({ id: 'sampleService2' }),
+    ],
   })
 
   await analytics.loadServices()
@@ -85,10 +86,10 @@ test('unload all services', async () => {
 
 test('sends tracked event to all registered plugins', async () => {
   const analytics = Analytics({
-    services: {
-      sampleService1: pluginSample(),
-      sampleService2: pluginSample(),
-    },
+    services: [
+      getMockPlugin({ id: 'sampleService1' }),
+      getMockPlugin({ id: 'sampleService2' }),
+    ],
   })
 
   await analytics.event({
@@ -105,10 +106,10 @@ test('sends tracked event to all registered plugins', async () => {
 
 test('sends page view to all registered plugins', async () => {
   const analytics = Analytics({
-    services: {
-      sampleService1: pluginSample(),
-      sampleService2: pluginSample(),
-    },
+    services: [
+      getMockPlugin({ id: 'sampleService1' }),
+      getMockPlugin({ id: 'sampleService2' }),
+    ],
   })
 
   analytics.loadServices()
@@ -124,10 +125,10 @@ test('sends page view to all registered plugins', async () => {
 
 test('can override url when sending a page view', async () => {
   const analytics = Analytics({
-    services: {
-      sampleService1: pluginSample(),
-      sampleService2: pluginSample(),
-    },
+    services: [
+      getMockPlugin({ id: 'sampleService1' }),
+      getMockPlugin({ id: 'sampleService2' }),
+    ],
   })
 
   await analytics.pageview({ page: '/potato' })
@@ -142,10 +143,10 @@ test('can override url when sending a page view', async () => {
 
 test('delegates identify to plugins', async () => {
   const analytics = Analytics({
-    services: {
-      sampleService1: pluginSample(),
-      sampleService2: pluginSample(),
-    },
+    services: [
+      getMockPlugin({ id: 'sampleService1' }),
+      getMockPlugin({ id: 'sampleService2' }),
+    ],
   })
 
   await analytics.identify({
@@ -162,10 +163,10 @@ test('delegates identify to plugins', async () => {
 
 test('anonymizes a user', async () => {
   const analytics = Analytics({
-    services: {
-      sampleService1: pluginSample(),
-      sampleService2: pluginSample(),
-    },
+    services: [
+      getMockPlugin({ id: 'sampleService1' }),
+      getMockPlugin({ id: 'sampleService2' }),
+    ],
   })
 
   await analytics.anonymize()
@@ -180,11 +181,20 @@ test('anonymizes a user', async () => {
 
 test('should not call methods defined on "explicitUseOnly"', async () => {
   const analytics = Analytics({
-    services: {
-      event: pluginSample({ explicitUseOnly: ['event'] }),
-      pageview: pluginSample({ explicitUseOnly: ['pageview'] }),
-      identify: pluginSample({ explicitUseOnly: ['identify'] }),
-    },
+    services: [
+      getMockPlugin({
+        id: 'event',
+        options: { explicitUseOnly: ['event'] },
+      }),
+      getMockPlugin({
+        id: 'pageview',
+        options: { explicitUseOnly: ['pageview'] },
+      }),
+      getMockPlugin({
+        id: 'identify',
+        options: { explicitUseOnly: ['identify'] },
+      }),
+    ],
   })
 
   await analytics.event({ label: 'potato' })
@@ -206,11 +216,20 @@ test('should not call methods defined on "explicitUseOnly"', async () => {
 
 test('should only call methods defined via "services"', async () => {
   const analytics = Analytics({
-    services: {
-      event: pluginSample({ explicitUseOnly: ['event'] }),
-      pageview: pluginSample({ explicitUseOnly: ['pageview'] }),
-      identify: pluginSample({ explicitUseOnly: ['identify'] }),
-    },
+    services: [
+      getMockPlugin({
+        id: 'event',
+        options: { explicitUseOnly: ['event'] },
+      }),
+      getMockPlugin({
+        id: 'pageview',
+        options: { explicitUseOnly: ['pageview'] },
+      }),
+      getMockPlugin({
+        id: 'identify',
+        options: { explicitUseOnly: ['identify'] },
+      }),
+    ],
   })
 
   await analytics.event({ label: 'potato' }, { services: ['event'] })
