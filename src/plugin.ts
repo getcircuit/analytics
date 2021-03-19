@@ -16,36 +16,32 @@ export function createPlugin<T>(factory: (options: T) => Service) {
   }
 }
 
-export function getServicePlugins<T extends Record<string, Service>>(
-  services: T,
-) {
-  return Object.entries(services).map(([id, service]) => {
-    const plugin = service as ServicePlugin
+export function initializePlugin(id: string, service: Service) {
+  const plugin = service as ServicePlugin
 
-    plugin.id = id
-    plugin.ctx = {
-      loaded: false,
-      loadPromise: undefined,
-    }
+  plugin.id = id
+  plugin.ctx = {
+    loaded: false,
+    loadPromise: undefined,
+  }
 
-    return Object.freeze(plugin)
-  })
+  return Object.freeze(plugin)
 }
 
-export function initializePlugin(plugin: ServicePlugin) {
+export function loadService(plugin: ServicePlugin) {
   if (plugin.ctx.loadPromise == null && !plugin.ctx.loaded) {
-    plugin.ctx.loadPromise = Promise.resolve(plugin.initialize()).then(() => {
+    plugin.ctx.loadPromise = Promise.resolve(plugin.load()).then(() => {
       plugin.ctx.loaded = true
       plugin.ctx.loadPromise = undefined
     })
   }
 
-  return plugin.ctx.loadPromise
+  return Promise.resolve(plugin.ctx.loadPromise)
 }
 
-export function destroyPlugin(plugin: ServicePlugin) {
+export function unloadService(plugin: ServicePlugin) {
   plugin.ctx.loaded = false
   plugin.ctx.loadPromise = undefined
 
-  return plugin.destroy?.()
+  return Promise.resolve(plugin.unload?.())
 }

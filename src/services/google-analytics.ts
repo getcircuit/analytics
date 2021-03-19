@@ -22,7 +22,7 @@ function gaSend(options: Record<string, unknown>): Promise<void> {
 
 const googleAnalytics = createPlugin(({ trackingId, debug }: Options) => {
   return {
-    async initialize() {
+    async load() {
       if (!window.ga) {
         /* eslint-disable */
         // prettier-ignore
@@ -35,7 +35,7 @@ const googleAnalytics = createPlugin(({ trackingId, debug }: Options) => {
 
       window.ga('create', trackingId, 'auto')
     },
-    destroy() {
+    unload() {
       document.querySelector('script[src*="google-analytics"]')?.remove()
       delete window.ga
     },
