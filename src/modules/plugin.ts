@@ -1,4 +1,10 @@
-import type { ServiceMethods, ServicePlugin } from '../types'
+import type {
+  AnalyticsWrapperContext,
+  ServiceMethods,
+  ServicePlugin,
+  PluginFactory,
+  PluginImplementation,
+} from '../types'
 
 export const TRACK_METHODS = [
   'event',
@@ -8,64 +14,44 @@ export const TRACK_METHODS = [
   'error',
 ] as const
 
-type PluginCommonOptions = {
-  explicitUseOnly?: Array<typeof TRACK_METHODS[number]>
-}
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function createPlugin<Id extends string, Options = {}>(
   id: Id,
-  getPluginMethods: (
-    this: ServicePlugin<Id>,
-    options: Options,
-  ) => ServiceMethods,
-) {
-  return (options: Options & PluginCommonOptions = {} as Options) => {
-    const plugin = {
-      id,
-      explicitUseOnly: options.explicitUseOnly,
-      ctx: {
-        loaded: false,
-        loadPromise: undefined,
-      },
-    } as ServicePlugin<Id>
+  getPluginImplementation: PluginImplementation<Options>,
+): PluginFactory<Id, Options> {
+  return (opts) => {
+    const { explicitUseOnly, ...options } = opts ?? {}
 
-    const pluginMethods = getPluginMethods.call(plugin, options)
+    return (context) => {
+      const plugin = {
+        id,
+        explicitUseOnly,
+        ctx: {
+          loaded: false,
+          loadPromise: undefined,
+        },
+        ...getPluginImplementation(options as Options, context),
+      } as ServicePlugin<Id>
 
-    plugin.load = () => {
-      if (plugin.ctx.loadPromise == null && !plugin.ctx.loaded) {
-        plugin.ctx.loadPromise = Promise.resolve(pluginMethods.load()).then(
-          () => {
-            plugin.ctx.loaded = true
-            plugin.ctx.loadPromise = undefined
-          },
-        )
-      }
-
-      return Promise.resolve(plugin.ctx.loadPromise)
+      return Object.freeze(plugin) as ServicePlugin<Id>
     }
-
-    // istanbul ignore else
-    if (pluginMethods.unload) {
-      plugin.unload = () => {
-        plugin.ctx.loaded = false
-        plugin.ctx.loadPromise = undefined
-
-        return Promise.resolve(pluginMethods.unload?.())
-      }
-    }
-
-    // wraps tracking methods so all of them awaits the service script to load
-    TRACK_METHODS.forEach((method) => {
-      if (pluginMethods[method] == null) return
-
-      plugin[method] = async (...args: unknown[]) => {
-        if (!plugin.ctx.loaded) await plugin.load()
-
-        // @ts-expect-error - Just passing args through
-        return pluginMethods[method](args)
-      }
-    })
-
-    return Object.freeze(plugin)
   }
+}
+
+export function loadService(plugin: ServicePlugin) {
+  if (plugin.ctx.loadPromise == null && !plugin.ctx.loaded) {
+    plugin.ctx.loadPromise = Promise.resolve(plugin.load()).then(() => {
+      plugin.ctx.loaded = true
+      plugin.ctx.loadPromise = undefined
+    })
+  }
+
+  return Promise.resolve(plugin.ctx.loadPromise)
+}
+
+export function unloadService(plugin: ServicePlugin) {
+  plugin.ctx.loaded = false
+  plugin.ctx.loadPromise = undefined
+
+  return Promise.resolve(plugin.unload?.())
 }

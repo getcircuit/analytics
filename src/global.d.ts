@@ -4,4 +4,5 @@ interface Window {
   _fbq?: any
   ga?: any
   FS?: any
+  Autopilot?: any
 }
