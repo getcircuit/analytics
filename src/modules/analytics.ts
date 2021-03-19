@@ -4,13 +4,21 @@ import type {
   TrackEventOptions,
   ServicePlugin,
 } from '../types'
+import { loadService, unloadService } from './plugin'
 import { allSettled } from './utils'
 
 function Analytics<PluginId extends string>(
   options: AnalyticsWrapperOptions<PluginId>,
 ) {
   type PluginIds = PluginId[]
-  const { plugins } = options
+
+  const context = {
+    debug: options.debug,
+    appVersion: options.appVersion,
+  }
+
+  // initiate all plugins with the current context
+  const plugins = options.plugins.map((plugin) => plugin(context))
 
   function event(
     eventArgs: TrackEventOptions,
@@ -28,6 +36,8 @@ function Analytics<PluginId extends string>(
         if (services == null && plugin.explicitUseOnly?.includes('event')) {
           return
         }
+
+        if (!plugin.ctx.loaded) await loadService(plugin)
 
         return plugin.event(eventArgs)
       }),
@@ -56,6 +66,8 @@ function Analytics<PluginId extends string>(
           return
         }
 
+        if (!plugin.ctx.loaded) await loadService(plugin)
+
         return plugin.pageview(pageviewArgs)
       }),
     )
@@ -78,17 +90,19 @@ function Analytics<PluginId extends string>(
           return
         }
 
+        if (!plugin.ctx.loaded) await loadService(plugin)
+
         return plugin.identify(user)
       }),
     )
   }
 
   function loadServices() {
-    return allSettled(plugins.map((plugin) => plugin.load()))
+    return allSettled(plugins.map(loadService))
   }
 
   function unloadServices() {
-    return allSettled(plugins.map((plugin) => plugin.unload?.()))
+    return allSettled(plugins.map(unloadService))
   }
 
   return {
