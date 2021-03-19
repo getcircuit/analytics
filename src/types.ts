@@ -34,8 +34,8 @@ export type IdentifyOptions = {
 }
 
 type ServiceMethods = {
-  initialize: () => MaybePromise<unknown>
-  destroy?: () => MaybePromise<unknown>
+  load: () => MaybePromise<unknown>
+  unload?: () => MaybePromise<unknown>
   error?: (opts: TrackErrorOptions) => MaybePromise<unknown>
   pageview?: (opts?: PageviewOptions | null) => MaybePromise<unknown>
   event?: (opts: TrackEventOptions) => MaybePromise<unknown>
