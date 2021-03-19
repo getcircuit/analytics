@@ -24,7 +24,7 @@ export async function addAutoPilotScript({ apiKey }) {
       z,
       y
     if (!window.Autopilot) window.Autopilot = a
-    if (o.app) p = `devmode=true&' + p
+    if (o.app) p = 'devmode=true&' + p
     z = function (src, asy) {
       var e = d.createElement(s)
       e.src = src
