@@ -1,17 +1,16 @@
-import { unloadService, loadService } from './plugin'
 import type {
   AnalyticsWrapperOptions,
   PageviewOptions,
   TrackEventOptions,
   ServicePlugin,
-} from './types'
+} from '../types'
 import { allSettled } from './utils'
 
 function Analytics<PluginId extends string>(
   options: AnalyticsWrapperOptions<PluginId>,
 ) {
   type PluginIds = PluginId[]
-  const plugins = options.services
+  const { plugins } = options
 
   function event(
     eventArgs: TrackEventOptions,
@@ -29,9 +28,6 @@ function Analytics<PluginId extends string>(
         if (services == null && plugin.explicitUseOnly?.includes('event')) {
           return
         }
-
-        // istanbul ignore else
-        if (!plugin.ctx.loaded) await loadService(plugin)
 
         return plugin.event(eventArgs)
       }),
@@ -60,9 +56,6 @@ function Analytics<PluginId extends string>(
           return
         }
 
-        // istanbul ignore else
-        if (!plugin.ctx.loaded) await loadService(plugin)
-
         return plugin.pageview(pageviewArgs)
       }),
     )
@@ -85,24 +78,21 @@ function Analytics<PluginId extends string>(
           return
         }
 
-        // istanbul ignore else
-        if (!plugin.ctx.loaded) await loadService(plugin)
-
         return plugin.identify(user)
       }),
     )
   }
 
   function loadServices() {
-    return allSettled(plugins.map(loadService))
+    return allSettled(plugins.map((plugin) => plugin.load()))
   }
 
   function unloadServices() {
-    return allSettled(plugins.map(unloadService))
+    return allSettled(plugins.map((plugin) => plugin.unload?.()))
   }
 
-  return Object.freeze({
-    services: plugins.reduce(
+  return {
+    plugins: plugins.reduce(
       (acc, plugin) => {
         acc[plugin.id as PluginId] = plugin
 
@@ -121,7 +111,7 @@ function Analytics<PluginId extends string>(
       // todo: this params
       return this.identify({ userId: null, anonymousId })
     },
-  })
+  }
 }
 
 export { Analytics }
