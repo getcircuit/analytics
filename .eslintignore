@@ -2,3 +2,4 @@
 /cjs/
 /types/
 /coverage/
+src/services/*/script.js

@@ -1,4 +1,6 @@
-type MaybePromise<T> = Promise<T> | T
+import type { TRACK_METHODS } from './modules/plugin'
+
+export type MaybePromise<T> = Promise<T> | T
 
 export type TrackEventOptions = {
   label: string
@@ -6,7 +8,7 @@ export type TrackEventOptions = {
 }
 
 export type PageviewOptions = {
-  page?: string
+  page: string
   location?: string
   title?: string
 }
@@ -21,30 +23,29 @@ export type AnonymizeOptions = {
 }
 
 export type IdentifyOptions = {
+  id?: string
   [key: string]: unknown
 }
 
-type ServiceMethods = {
+export type ServiceMethods = {
   load: () => MaybePromise<unknown>
   unload?: () => MaybePromise<unknown>
   error?: (opts: TrackErrorOptions) => MaybePromise<unknown>
-  pageview?: (opts?: PageviewOptions | null) => MaybePromise<unknown>
+  pageview?: (opts: PageviewOptions) => MaybePromise<unknown>
   event?: (opts: TrackEventOptions) => MaybePromise<unknown>
   identify?: (opts: IdentifyOptions) => MaybePromise<unknown>
   anonymize?: (options?: AnonymizeOptions) => MaybePromise<unknown>
+} & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: (...args: any[]) => any
 }
-
-export type ServiceTrackMethod = keyof Exclude<
-  ServiceMethods,
-  'initialize' | 'destroy'
->
 
 export type Service = ServiceMethods & {
-  explicitUseOnly?: ServiceTrackMethod[]
+  explicitUseOnly?: Array<typeof TRACK_METHODS[number]>
 }
 
-export type ServicePlugin<T extends string = string> = Service & {
-  id: T
+export type ServicePlugin<Id extends string = string> = Service & {
+  id: Id
   ctx: {
     loaded?: boolean
     loadPromise?: Promise<unknown>
@@ -52,6 +53,6 @@ export type ServicePlugin<T extends string = string> = Service & {
 }
 
 export type AnalyticsWrapperOptions<T extends string> = {
-  services: Array<ServicePlugin<T>>
+  plugins: Array<ServicePlugin<T>>
   debug?: boolean
 }
