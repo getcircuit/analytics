@@ -7,14 +7,15 @@ import type {
 } from './types'
 import { allSettled } from './utils'
 
-function Analytics<PluginIds extends string>(
-  options: AnalyticsWrapperOptions<PluginIds>,
+function Analytics<PluginId extends string>(
+  options: AnalyticsWrapperOptions<PluginId>,
 ) {
+  type PluginIds = PluginId[]
   const plugins = options.services
 
   function event(
     eventArgs: TrackEventOptions,
-    { services }: { services?: PluginIds[] } = {},
+    { services }: { services?: PluginIds } = {},
   ) {
     // istanbul ignore next
     if (options.debug) {
@@ -39,7 +40,7 @@ function Analytics<PluginIds extends string>(
 
   function pageview(
     args?: PageviewOptions | null,
-    { services }: { services?: PluginIds[] } = {},
+    { services }: { services?: PluginIds } = {},
   ) {
     const pageviewArgs = {
       page: document.location.pathname,
@@ -69,7 +70,7 @@ function Analytics<PluginIds extends string>(
 
   function identify(
     user: Record<string, unknown>,
-    { services }: { services?: PluginIds[] } = {},
+    { services }: { services?: PluginIds } = {},
   ) {
     // istanbul ignore next
     if (options.debug) {
@@ -103,12 +104,12 @@ function Analytics<PluginIds extends string>(
   return Object.freeze({
     services: plugins.reduce(
       (acc, plugin) => {
-        acc[plugin.id as PluginIds] = plugin
+        acc[plugin.id as PluginId] = plugin
 
         return acc
       },
       {} as {
-        [key in PluginIds]: ServicePlugin<key>
+        [key in PluginId]: ServicePlugin<key>
       },
     ),
     loadServices,
