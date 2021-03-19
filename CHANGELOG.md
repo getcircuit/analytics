@@ -1,3 +1,19 @@
+## [0.0.7](https://github.com/getcircuit/analytics/compare/v0.0.6...v0.0.7) (2021-03-19)
+
+
+### Bug Fixes
+
+* pass appversion to amplitude plugin ([1d3b398](https://github.com/getcircuit/analytics/commit/1d3b398e4051165fc885048507615260b77fa27a))
+
+
+### Features
+
+* add autopilot ([fe945fb](https://github.com/getcircuit/analytics/commit/fe945fbc6d2f4a67d842aa6e076b9e909128bef4))
+* amplitude plugin ([3cb4291](https://github.com/getcircuit/analytics/commit/3cb429158ad7f747481d062e425459002bdda6b0))
+* pass context to plugins ([617262b](https://github.com/getcircuit/analytics/commit/617262bde16701c9084b361f51901d3b77ae1d1f))
+
+
+
 ## [0.0.6](https://github.com/getcircuit/analytics/compare/v0.0.5...v0.0.6) (2021-03-19)
 
 
