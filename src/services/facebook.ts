@@ -9,7 +9,7 @@ type Options = {
   pixelId: string
 }
 
-const facebookPixel = createPlugin(({ pixelId }: Options) => {
+const facebookPixel = createPlugin('facebook-pixel', ({ pixelId }: Options) => {
   return {
     async load() {
       if (!window.fbq) {

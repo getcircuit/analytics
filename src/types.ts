@@ -21,15 +21,6 @@ export type AnonymizeOptions = {
 }
 
 export type IdentifyOptions = {
-  id?: string
-  uid?: string
-  phone?: string
-  userId?: string
-  distinctId?: string
-  displayName?: string
-  fullName?: string
-  name?: string
-  email?: string
   [key: string]: unknown
 }
 
@@ -52,17 +43,15 @@ export type Service = ServiceMethods & {
   explicitUseOnly?: ServiceTrackMethod[]
 }
 
-export type ServicePlugin = Service & {
-  id: string
+export type ServicePlugin<T extends string = string> = Service & {
+  id: T
   ctx: {
     loaded?: boolean
     loadPromise?: Promise<unknown>
   }
 }
 
-export type AnalyticsWrapperOptions<T> = {
-  services: T
+export type AnalyticsWrapperOptions<T extends string> = {
+  services: Array<ServicePlugin<T>>
   debug?: boolean
-  /** Generate an unique id from a user */
-  parseUser?: (user: unknown) => IdentifyOptions
 }
