@@ -6,4 +6,5 @@ interface Window {
   FS?: any
   Autopilot?: any
   amplitude?: any
+  Beacon?: any
 }
