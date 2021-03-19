@@ -24,6 +24,7 @@ export type AnonymizeOptions = {
 
 export type IdentifyOptions = {
   id?: string
+  fullName?: string
   [key: string]: unknown
 }
 
@@ -52,7 +53,30 @@ export type ServicePlugin<Id extends string = string> = Service & {
   }
 }
 
-export type AnalyticsWrapperOptions<T extends string> = {
-  plugins: Array<ServicePlugin<T>>
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type PluginOptions<Options extends Object> = Options & {
+  explicitUseOnly?: Array<typeof TRACK_METHODS[number]>
+}
+
+export type PluginImplementation<Options> = (
+  options: Options,
+  context: AnalyticsWrapperContext,
+) => ServiceMethods
+
+export type PluginInitiator<Id extends string> = (
+  ctx: AnalyticsWrapperContext,
+) => ServicePlugin<Id>
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type PluginFactory<Id extends string, Options = {}> = (
+  options?: PluginOptions<Options>,
+) => PluginInitiator<Id>
+
+export type AnalyticsWrapperContext = {
+  appVersion?: string
   debug?: boolean
 }
+
+export type AnalyticsWrapperOptions<Id extends string> = {
+  plugins: Array<PluginInitiator<Id>>
+} & AnalyticsWrapperContext
