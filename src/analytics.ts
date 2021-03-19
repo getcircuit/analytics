@@ -1,4 +1,4 @@
-import { getServicePlugins, destroyPlugin, initializePlugin } from './plugin'
+import { initializePlugin, unloadService, loadService } from './plugin'
 import type {
   AnalyticsWrapperOptions,
   IdentifyOptions,
@@ -8,22 +8,30 @@ import type {
   ServicePlugin,
 } from './types'
 
+/** Quick and dirty Promise.allSettle ponyfill */
+function waitAllSettled(promises: Array<Promise<unknown>>) {
+  return Promise.all(promises.map((promise) => promise.catch(() => undefined)))
+}
+
 function Analytics<ServiceMap extends Record<string, Service>>(
   options: AnalyticsWrapperOptions<ServiceMap>,
 ) {
   type ServiceList = Array<keyof ServiceMap>
 
-  const plugins = getServicePlugins(options.services)
+  const plugins = Object.entries(options.services).map(([id, plugin]) =>
+    initializePlugin(id, plugin),
+  )
 
   function event(
     eventArgs: TrackEventOptions,
     { services }: { services?: ServiceList } = {},
   ) {
+    // istanbul ignore next
     if (options.debug) {
       console.info(`Sending event: ${JSON.stringify(eventArgs)}`)
     }
 
-    return Promise.allSettled(
+    return waitAllSettled(
       plugins.map(async (plugin) => {
         if (plugin.event == null) return
         if (services != null && !services?.includes(plugin.id)) return
@@ -32,7 +40,7 @@ function Analytics<ServiceMap extends Record<string, Service>>(
         }
 
         // istanbul ignore else
-        if (!plugin.ctx.loaded) await initializePlugin(plugin)
+        if (!plugin.ctx.loaded) await loadService(plugin)
 
         return plugin.event(eventArgs)
       }),
@@ -48,11 +56,12 @@ function Analytics<ServiceMap extends Record<string, Service>>(
       ...args,
     }
 
+    // istanbul ignore next
     if (options.debug) {
       console.info(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
     }
 
-    return Promise.allSettled(
+    return waitAllSettled(
       plugins.map(async (plugin) => {
         if (plugin.pageview == null) return
         if (services != null && !services?.includes(plugin.id)) return
@@ -61,7 +70,7 @@ function Analytics<ServiceMap extends Record<string, Service>>(
         }
 
         // istanbul ignore else
-        if (!plugin.ctx.loaded) await initializePlugin(plugin)
+        if (!plugin.ctx.loaded) await loadService(plugin)
 
         return plugin.pageview(pageviewArgs)
       }),
@@ -74,11 +83,12 @@ function Analytics<ServiceMap extends Record<string, Service>>(
   ) {
     const userArgs = options.parseUser?.(user) ?? (user as IdentifyOptions)
 
+    // istanbul ignore next
     if (options.debug) {
       console.info(`Identifying user: ${JSON.stringify(userArgs)}`)
     }
 
-    return Promise.allSettled(
+    return waitAllSettled(
       plugins.map(async (plugin) => {
         if (plugin.identify == null) return
         if (services != null && !services?.includes(plugin.id)) return
@@ -87,19 +97,19 @@ function Analytics<ServiceMap extends Record<string, Service>>(
         }
 
         // istanbul ignore else
-        if (!plugin.ctx.loaded) await initializePlugin(plugin)
+        if (!plugin.ctx.loaded) await loadService(plugin)
 
         return plugin.identify(userArgs)
       }),
     )
   }
 
-  function initialize() {
-    return Promise.allSettled(plugins.map(initializePlugin))
+  function loadServices() {
+    return waitAllSettled(plugins.map(loadService))
   }
 
-  function destroy() {
-    return Promise.allSettled(plugins.map(destroyPlugin))
+  function unloadServices() {
+    return waitAllSettled(plugins.map(unloadService))
   }
 
   return Object.freeze({
@@ -108,8 +118,8 @@ function Analytics<ServiceMap extends Record<string, Service>>(
 
       return acc
     }, {} as Record<keyof ServiceMap, ServicePlugin>),
-    initialize,
-    destroy,
+    loadServices,
+    unloadServices,
     event,
     pageview,
     identify,

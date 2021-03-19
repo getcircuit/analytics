@@ -2,8 +2,8 @@ import { Analytics, servicePlugin } from './index'
 
 const pluginSample = servicePlugin(() => {
   return {
-    initialize: jest.fn(),
-    destroy: jest.fn(),
+    load: jest.fn(),
+    unload: jest.fn(),
     event: jest.fn(),
     identify: jest.fn(),
     anonymize: jest.fn(),
@@ -11,7 +11,7 @@ const pluginSample = servicePlugin(() => {
   }
 })
 
-test('initializes all plugins', async () => {
+test('load all services', async () => {
   const analytics = Analytics({
     services: {
       sampleService1: pluginSample(),
@@ -22,10 +22,10 @@ test('initializes all plugins', async () => {
   expect(analytics.services.sampleService1.ctx.loaded).toBe(false)
   expect(analytics.services.sampleService2.ctx.loaded).toBe(false)
 
-  await analytics.initialize()
+  await analytics.loadServices()
 
-  expect(analytics.services.sampleService1.initialize).toHaveBeenCalledTimes(1)
-  expect(analytics.services.sampleService2.initialize).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService1.load).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService2.load).toHaveBeenCalledTimes(1)
   expect(analytics.services.sampleService1.ctx.loaded).toBe(true)
   expect(analytics.services.sampleService2.ctx.loaded).toBe(true)
 })
@@ -34,15 +34,15 @@ test('lazily initialize plugins that implement the executed method', async () =>
   const analytics = Analytics({
     services: {
       identifyService: {
-        initialize: jest.fn(),
+        load: jest.fn(),
         identify: jest.fn(),
       },
       eventService: {
-        initialize: jest.fn(),
+        load: jest.fn(),
         event: jest.fn(),
       },
       pageviewService: {
-        initialize: jest.fn(),
+        load: jest.fn(),
         pageview: jest.fn(),
       },
     },
@@ -62,7 +62,7 @@ test('lazily initialize plugins that implement the executed method', async () =>
   expect(analytics.services.pageviewService.ctx.loaded).toBe(true)
 })
 
-test('destroy all plugins', async () => {
+test('unload all services', async () => {
   const analytics = Analytics({
     services: {
       sampleService1: pluginSample(),
@@ -70,15 +70,15 @@ test('destroy all plugins', async () => {
     },
   })
 
-  await analytics.initialize()
+  await analytics.loadServices()
 
   expect(analytics.services.sampleService1.ctx.loaded).toBe(true)
   expect(analytics.services.sampleService2.ctx.loaded).toBe(true)
 
-  await analytics.destroy()
+  await analytics.unloadServices()
 
-  expect(analytics.services.sampleService1.destroy).toHaveBeenCalledTimes(1)
-  expect(analytics.services.sampleService2.destroy).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService1.unload).toHaveBeenCalledTimes(1)
+  expect(analytics.services.sampleService2.unload).toHaveBeenCalledTimes(1)
   expect(analytics.services.sampleService1.ctx.loaded).toBe(false)
   expect(analytics.services.sampleService2.ctx.loaded).toBe(false)
 })
@@ -111,7 +111,7 @@ test('sends page view to all registered plugins', async () => {
     },
   })
 
-  analytics.initialize()
+  analytics.loadServices()
   await analytics.pageview()
 
   expect(analytics.services.sampleService1.pageview).toHaveBeenCalledWith({

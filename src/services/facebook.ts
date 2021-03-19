@@ -11,7 +11,7 @@ type Options = {
 
 const facebookPixel = createPlugin(({ pixelId }: Options) => {
   return {
-    async initialize() {
+    async load() {
       if (!window.fbq) {
         /* eslint-disable */
         // prettier-ignore
@@ -25,7 +25,7 @@ const facebookPixel = createPlugin(({ pixelId }: Options) => {
 
       window?.fbq('init', pixelId)
     },
-    destroy() {
+    unload() {
       document.querySelector('script[src*="fbevents"]')?.remove()
 
       delete window.fbq
