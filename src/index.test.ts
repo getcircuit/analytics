@@ -1,36 +1,26 @@
 import { Analytics, createPlugin } from './index'
-import type { Service, ServicePlugin } from './types'
+import type { Service } from './types'
 
-function getMockPlugin<Id extends string>({
+// eslint-disable-next-line @typescript-eslint/ban-types
+function getMockPlugin<Options = {}, Id extends string = string>({
   id,
   options,
   methods,
 }: {
   id: Id
-  options?: Record<string, unknown>
+  options?: Options
   methods?: string[]
 }) {
-  const plugin = createPlugin<Id>(id, () => {
+  return createPlugin<Id>(id, () => {
     if (methods == null) {
       methods = ['event', 'pageview', 'identify', 'anonymize', 'error']
     }
 
     // create noop methods
     return (Object.fromEntries(
-      ['load', 'unload', ...methods].map((name) => [name, () => {}]),
+      ['load', 'unload', ...methods].map((name) => [name, jest.fn()]),
     ) as unknown) as Service
   })(options)
-
-  // wrap plugin methods with "jest.fn"
-  return (Object.fromEntries(
-    Object.entries(plugin).map(([prop, value]) => {
-      if (typeof value === 'function') {
-        return [prop, jest.fn(value)]
-      }
-
-      return [prop, value]
-    }),
-  ) as unknown) as ServicePlugin<Id>
 }
 
 test('load all services', async () => {
@@ -259,4 +249,37 @@ test('should only call methods defined via "services"', async () => {
   expect(analytics.plugins.event.identify).toHaveBeenCalledTimes(0)
   expect(analytics.plugins.pageview.identify).toHaveBeenCalledTimes(0)
   expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(1)
+})
+
+test('passes abstraction context to plugins', async () => {
+  const plugin1 = jest.fn(
+    createPlugin('plugin1', () => ({
+      load: () => {},
+    }))(),
+  )
+
+  const plugin2 = jest.fn(
+    createPlugin('plugin1', () => ({
+      load: () => {},
+    }))(),
+  )
+
+  Analytics({
+    debug: true,
+    appVersion: '1.0.0',
+    plugins: [plugin1, plugin2],
+  })
+
+  expect(plugin1).toBeCalledWith(
+    expect.objectContaining({
+      debug: true,
+      appVersion: '1.0.0',
+    }),
+  )
+  expect(plugin2).toBeCalledWith(
+    expect.objectContaining({
+      debug: true,
+      appVersion: '1.0.0',
+    }),
+  )
 })
