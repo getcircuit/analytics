@@ -5,4 +5,5 @@ interface Window {
   ga?: any
   FS?: any
   Autopilot?: any
+  amplitude?: any
 }
