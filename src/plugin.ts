@@ -4,28 +4,28 @@ type PluginCommonOptions = {
   explicitUseOnly?: ServiceTrackMethod[]
 }
 
-export function createPlugin<T>(factory: (options: T) => Service) {
-  return (options: T & PluginCommonOptions = {} as T) => {
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function createPlugin<Id extends string, Options = {}>(
+  id: Id,
+  factory: (options: Options) => Service,
+) {
+  return (options: Options & PluginCommonOptions = {} as Options) => {
     const service = factory(options)
 
     if (options?.explicitUseOnly) {
       service.explicitUseOnly = options.explicitUseOnly
     }
 
-    return service
+    const plugin = service as ServicePlugin
+
+    plugin.id = id
+    plugin.ctx = {
+      loaded: false,
+      loadPromise: undefined,
+    }
+
+    return Object.freeze(plugin) as ServicePlugin<Id>
   }
-}
-
-export function initializePlugin(id: string, service: Service) {
-  const plugin = service as ServicePlugin
-
-  plugin.id = id
-  plugin.ctx = {
-    loaded: false,
-    loadPromise: undefined,
-  }
-
-  return Object.freeze(plugin)
 }
 
 export function loadService(plugin: ServicePlugin) {
