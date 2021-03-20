@@ -1,16 +1,16 @@
 import type {
+  SharedContext,
   PageviewOptions,
   IdentifyOptions,
   TrackEventOptions,
 } from '../../types'
-import { createPlugin } from '../../modules/plugin'
 import { addHelpscoutScript } from './script'
 
 type Options = {
   apiKey: string
 }
 
-const helpscout = createPlugin('helpscout', ({ apiKey }: Options, context) => {
+const helpscout = ({ apiKey }: Options) => {
   function load() {
     addHelpscoutScript()
     window.Beacon('init', apiKey)
@@ -41,12 +41,11 @@ const helpscout = createPlugin('helpscout', ({ apiKey }: Options, context) => {
     })
   }
 
-  function identify(userInfo: IdentifyOptions) {
+  function identify(this: SharedContext, userInfo: IdentifyOptions) {
     window.Beacon('identify', userInfo)
     window.Beacon('session-data', {
-      // todo
-      // releaseStage,
-      appVersion: context.appVersion,
+      releaseStage: this.meta.env,
+      appVersion: this.meta.appVersion,
     })
   }
 
@@ -55,6 +54,7 @@ const helpscout = createPlugin('helpscout', ({ apiKey }: Options, context) => {
   }
 
   return {
+    name: 'helpscout',
     load,
     unload,
     event,
@@ -62,6 +62,6 @@ const helpscout = createPlugin('helpscout', ({ apiKey }: Options, context) => {
     identify,
     anonymize,
   }
-})
+}
 
 export { helpscout }

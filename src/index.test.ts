@@ -1,96 +1,95 @@
-import { Analytics, createPlugin } from './index'
-import type { Service } from './types'
+import { Analytics } from './index'
+import type { Plugin, SharedContext } from './types'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-function getMockPlugin<Options = {}, Id extends string = string>({
-  id,
-  options,
+function getMockPlugin<Name extends string = string>({
+  name,
   methods,
 }: {
-  id: Id
-  options?: Options
+  name: Name
   methods?: string[]
 }) {
-  return createPlugin<Id>(id, () => {
-    if (methods == null) {
-      methods = ['event', 'pageview', 'identify', 'anonymize', 'error']
-    }
+  if (methods == null) {
+    methods = ['event', 'pageview', 'identify', 'anonymize', 'error']
+  }
 
-    // create noop methods
-    return (Object.fromEntries(
-      ['load', 'unload', ...methods].map((name) => [name, jest.fn()]),
-    ) as unknown) as Service
-  })(options)
+  // create noop methods
+  return ({
+    ...Object.fromEntries(
+      ['load', 'unload', ...methods].map((method) => [method, jest.fn()]),
+    ),
+    name,
+  } as unknown) as Plugin<Name>
 }
 
 test('load all services', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'sampleService1' }),
-      getMockPlugin({ id: 'sampleService2' }),
+      getMockPlugin({ name: 'sampleService1' }),
+      getMockPlugin({ name: 'sampleService2' }),
     ],
   })
 
-  expect(analytics.plugins.sampleService1.ctx.loaded).toBe(false)
-  expect(analytics.plugins.sampleService2.ctx.loaded).toBe(false)
+  expect(analytics.plugins.sampleService1.context.loaded).toBe(false)
+  expect(analytics.plugins.sampleService2.context.loaded).toBe(false)
 
   await analytics.loadServices()
 
   expect(analytics.plugins.sampleService1.load).toHaveBeenCalledTimes(1)
   expect(analytics.plugins.sampleService2.load).toHaveBeenCalledTimes(1)
-  expect(analytics.plugins.sampleService1.ctx.loaded).toBe(true)
-  expect(analytics.plugins.sampleService2.ctx.loaded).toBe(true)
+  expect(analytics.plugins.sampleService1.context.loaded).toBe(true)
+  expect(analytics.plugins.sampleService2.context.loaded).toBe(true)
 })
 
 test('lazily initialize plugins that implement the executed method', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'identifyService', methods: ['identify'] }),
-      getMockPlugin({ id: 'eventService', methods: ['event'] }),
-      getMockPlugin({ id: 'pageviewService', methods: ['pageview'] }),
+      getMockPlugin({ name: 'identifyService', methods: ['identify'] }),
+      getMockPlugin({ name: 'eventService', methods: ['event'] }),
+      getMockPlugin({ name: 'pageviewService', methods: ['pageview'] }),
     ],
   })
 
   await analytics.event({ label: 'click' })
 
-  expect(analytics.plugins.identifyService.ctx.loaded).toBe(false)
-  expect(analytics.plugins.pageviewService.ctx.loaded).toBe(false)
-  expect(analytics.plugins.eventService.ctx.loaded).toBe(true)
+  expect(analytics.plugins.identifyService.context.loaded).toBe(false)
+  expect(analytics.plugins.pageviewService.context.loaded).toBe(false)
+  expect(analytics.plugins.eventService.context.loaded).toBe(true)
 
   await analytics.identify({})
-  expect(analytics.plugins.identifyService.ctx.loaded).toBe(true)
-  expect(analytics.plugins.pageviewService.ctx.loaded).toBe(false)
+  expect(analytics.plugins.identifyService.context.loaded).toBe(true)
+  expect(analytics.plugins.pageviewService.context.loaded).toBe(false)
 
   await analytics.pageview()
-  expect(analytics.plugins.pageviewService.ctx.loaded).toBe(true)
+  expect(analytics.plugins.pageviewService.context.loaded).toBe(true)
 })
 
 test('unload all services', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'sampleService1' }),
-      getMockPlugin({ id: 'sampleService2' }),
+      getMockPlugin({ name: 'sampleService1' }),
+      getMockPlugin({ name: 'sampleService2' }),
     ],
   })
 
   await analytics.loadServices()
 
-  expect(analytics.plugins.sampleService1.ctx.loaded).toBe(true)
-  expect(analytics.plugins.sampleService2.ctx.loaded).toBe(true)
+  expect(analytics.plugins.sampleService1.context.loaded).toBe(true)
+  expect(analytics.plugins.sampleService2.context.loaded).toBe(true)
 
   await analytics.unloadServices()
 
   expect(analytics.plugins.sampleService1.unload).toHaveBeenCalledTimes(1)
   expect(analytics.plugins.sampleService2.unload).toHaveBeenCalledTimes(1)
-  expect(analytics.plugins.sampleService1.ctx.loaded).toBe(false)
-  expect(analytics.plugins.sampleService2.ctx.loaded).toBe(false)
+  expect(analytics.plugins.sampleService1.context.loaded).toBe(false)
+  expect(analytics.plugins.sampleService2.context.loaded).toBe(false)
 })
 
 test('sends tracked event to all registered plugins', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'sampleService1' }),
-      getMockPlugin({ id: 'sampleService2' }),
+      getMockPlugin({ name: 'sampleService1' }),
+      getMockPlugin({ name: 'sampleService2' }),
     ],
   })
 
@@ -109,8 +108,8 @@ test('sends tracked event to all registered plugins', async () => {
 test('sends page view to all registered plugins', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'sampleService1' }),
-      getMockPlugin({ id: 'sampleService2' }),
+      getMockPlugin({ name: 'sampleService1' }),
+      getMockPlugin({ name: 'sampleService2' }),
     ],
   })
 
@@ -128,8 +127,8 @@ test('sends page view to all registered plugins', async () => {
 test('can override url when sending a page view', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'sampleService1' }),
-      getMockPlugin({ id: 'sampleService2' }),
+      getMockPlugin({ name: 'sampleService1' }),
+      getMockPlugin({ name: 'sampleService2' }),
     ],
   })
 
@@ -146,8 +145,8 @@ test('can override url when sending a page view', async () => {
 test('delegates identify to plugins', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'sampleService1' }),
-      getMockPlugin({ id: 'sampleService2' }),
+      getMockPlugin({ name: 'sampleService1' }),
+      getMockPlugin({ name: 'sampleService2' }),
     ],
   })
 
@@ -166,8 +165,8 @@ test('delegates identify to plugins', async () => {
 test('anonymizes a user', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({ id: 'sampleService1' }),
-      getMockPlugin({ id: 'sampleService2' }),
+      getMockPlugin({ name: 'sampleService1' }),
+      getMockPlugin({ name: 'sampleService2' }),
     ],
   })
 
@@ -181,27 +180,18 @@ test('anonymizes a user', async () => {
   })
 })
 
-test('should not call methods defined on "explicitUseOnly"', async () => {
+test('should exclude plugin from tracking calls', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({
-        id: 'event',
-        options: { explicitUseOnly: ['event'] },
-      }),
-      getMockPlugin({
-        id: 'pageview',
-        options: { explicitUseOnly: ['pageview'] },
-      }),
-      getMockPlugin({
-        id: 'identify',
-        options: { explicitUseOnly: ['identify'] },
-      }),
+      getMockPlugin({ name: 'event' }),
+      getMockPlugin({ name: 'pageview' }),
+      getMockPlugin({ name: 'identify' }),
     ],
   })
 
-  await analytics.event({ label: 'potato' })
-  await analytics.pageview()
-  await analytics.identify({})
+  await analytics.event({ label: 'potato' }, { exclude: ['event'] })
+  await analytics.pageview(null, { exclude: ['pageview'] })
+  await analytics.identify({}, { exclude: ['identify'] })
 
   expect(analytics.plugins.event.event).toHaveBeenCalledTimes(0)
   expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(1)
@@ -216,27 +206,18 @@ test('should not call methods defined on "explicitUseOnly"', async () => {
   expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(0)
 })
 
-test('should only call methods defined via "services"', async () => {
+test('should only call included services', async () => {
   const analytics = Analytics({
     plugins: [
-      getMockPlugin({
-        id: 'event',
-        options: { explicitUseOnly: ['event'] },
-      }),
-      getMockPlugin({
-        id: 'pageview',
-        options: { explicitUseOnly: ['pageview'] },
-      }),
-      getMockPlugin({
-        id: 'identify',
-        options: { explicitUseOnly: ['identify'] },
-      }),
+      getMockPlugin({ name: 'event' }),
+      getMockPlugin({ name: 'pageview' }),
+      getMockPlugin({ name: 'identify' }),
     ],
   })
 
-  await analytics.event({ label: 'potato' }, { services: ['event'] })
-  await analytics.pageview(null, { services: ['pageview'] })
-  await analytics.identify({}, { services: ['identify'] })
+  await analytics.event({ label: 'potato' }, { include: ['event'] })
+  await analytics.pageview(null, { include: ['pageview'] })
+  await analytics.identify({}, { include: ['identify'] })
 
   expect(analytics.plugins.event.event).toHaveBeenCalledTimes(1)
   expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(0)
@@ -251,35 +232,39 @@ test('should only call methods defined via "services"', async () => {
   expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(1)
 })
 
-test('passes abstraction context to plugins', async () => {
-  const plugin1 = jest.fn(
-    createPlugin('plugin1', () => ({
-      load: () => {},
-    }))(),
-  )
+test('passes shared context to plugins', async () => {
+  const plugin1 = {
+    name: 'plugin1',
+    load: jest.fn(),
+    pageview: jest.fn(function pageview1(this: SharedContext) {
+      return this
+    }),
+  }
 
-  const plugin2 = jest.fn(
-    createPlugin('plugin1', () => ({
-      load: () => {},
-    }))(),
-  )
+  const plugin2 = {
+    name: 'plugin2',
+    load: jest.fn(),
+    pageview: jest.fn(function pageview1(this: SharedContext) {
+      return this
+    }),
+  }
 
-  Analytics({
+  const analytics = Analytics({
     debug: true,
     appVersion: '1.0.0',
     plugins: [plugin1, plugin2],
   })
 
-  expect(plugin1).toBeCalledWith(
-    expect.objectContaining({
-      debug: true,
-      appVersion: '1.0.0',
-    }),
+  const expectedContext = {
+    meta: { appVersion: '1.0.0', debug: true, env: undefined },
+  }
+
+  await analytics.pageview()
+
+  expect(plugin1.pageview).toReturnWith(
+    expect.objectContaining(expectedContext),
   )
-  expect(plugin2).toBeCalledWith(
-    expect.objectContaining({
-      debug: true,
-      appVersion: '1.0.0',
-    }),
+  expect(plugin2.pageview).toReturnWith(
+    expect.objectContaining(expectedContext),
   )
 })
