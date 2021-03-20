@@ -3,7 +3,6 @@ import type {
   PageviewOptions,
   TrackEventOptions,
 } from '../../types'
-import { createPlugin } from '../../modules/plugin'
 import { addFullstoryScript } from './script'
 
 type Options = {
@@ -14,7 +13,7 @@ type Options = {
 const FS_SESSION_KEY = 'fullstory-session-url'
 const FS_UID_KEY = 'fullstory-session-uid'
 
-const fullstory = createPlugin('fullstory', ({ org, debug }: Options) => {
+const fullstory = ({ org, debug }: Options) => {
   function load() {
     return addFullstoryScript({ org, debug })
   }
@@ -83,6 +82,7 @@ const fullstory = createPlugin('fullstory', ({ org, debug }: Options) => {
   }
 
   return {
+    name: 'fullstory',
     load,
     unload,
     pageview,
@@ -90,6 +90,6 @@ const fullstory = createPlugin('fullstory', ({ org, debug }: Options) => {
     identify,
     anonymize,
   }
-})
+}
 
 export { fullstory }

@@ -1,5 +1,3 @@
-import type { TRACK_METHODS } from './modules/plugin'
-
 export type MaybePromise<T> = Promise<T> | T
 
 export type TrackEventOptions = {
@@ -24,7 +22,7 @@ export type IdentifyOptions = {
   [key: string]: unknown
 }
 
-export type ServiceMethods = {
+export type PluginMethods = {
   load: () => MaybePromise<unknown>
   unload?: () => MaybePromise<unknown>
   error?: (opts: TrackErrorOptions) => MaybePromise<unknown>
@@ -32,47 +30,32 @@ export type ServiceMethods = {
   event?: (opts: TrackEventOptions) => MaybePromise<unknown>
   identify?: (opts: IdentifyOptions) => MaybePromise<unknown>
   anonymize?: () => MaybePromise<unknown>
-} & {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: (...args: any[]) => any
 }
 
-export type Service = ServiceMethods & {
-  explicitUseOnly?: Array<typeof TRACK_METHODS[number]>
-}
+export type Plugin<PluginName extends string = string> = {
+  name: PluginName
+} & PluginMethods
 
-export type ServicePlugin<Id extends string = string> = Service & {
-  id: Id
-  ctx: {
+export type LoadedPlugin<
+  PluginName extends string = string
+> = Plugin<PluginName> & {
+  context: {
     loaded?: boolean
     loadPromise?: Promise<unknown>
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type PluginOptions<Options extends Object> = Options & {
-  explicitUseOnly?: Array<typeof TRACK_METHODS[number]>
+export type SharedContext = {
+  meta: {
+    env?: string
+    appVersion?: string
+    debug?: boolean
+  }
 }
 
-export type PluginImplementation<Options> = (
-  options: Options,
-  context: AnalyticsWrapperContext,
-) => ServiceMethods
-
-export type PluginInitiator<Id extends string> = (
-  ctx: AnalyticsWrapperContext,
-) => ServicePlugin<Id>
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type PluginFactory<Id extends string, Options = {}> = (
-  options?: PluginOptions<Options>,
-) => PluginInitiator<Id>
-
-export type AnalyticsWrapperContext = {
+export type AnalyticsWrapperOptions<PluginName extends string> = {
+  plugins: Array<Plugin<PluginName>>
+  env?: string
   appVersion?: string
   debug?: boolean
 }
-
-export type AnalyticsWrapperOptions<Id extends string> = {
-  plugins: Array<PluginInitiator<Id>>
-} & AnalyticsWrapperContext

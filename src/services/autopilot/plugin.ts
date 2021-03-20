@@ -1,5 +1,4 @@
-import type { IdentifyOptions } from '../../types'
-import { createPlugin } from '../../modules/plugin'
+import type { SharedContext, IdentifyOptions } from '../../types'
 import { addAutoPilotScript } from './script'
 
 type Options = {
@@ -19,18 +18,15 @@ function getNameProps(fullName?: string) {
   }
 }
 
-const autopilot = createPlugin('autopilot', ({ apiKey }: Options, context) => {
+const autopilot = ({ apiKey }: Options) => {
   function load() {
     return addAutoPilotScript({ apiKey })
   }
 
-  function identify({
-    uid,
-    email,
-    phone,
-    fullName,
-    distinctId,
-  }: IdentifyOptions = {}) {
+  function identify(
+    this: SharedContext,
+    { uid, email, phone, fullName, distinctId }: IdentifyOptions = {},
+  ) {
     // todo
 
     window.Autopilot.run('associate', {
@@ -40,16 +36,17 @@ const autopilot = createPlugin('autopilot', ({ apiKey }: Options, context) => {
       Email: email,
       custom: {
         'string--Distinct--Id': distinctId,
-        'string--App--Version': context.appVersion,
+        'string--App--Version': this.meta.appVersion,
         'string--UID': uid,
       },
     })
   }
 
   return {
+    name: 'autopilot',
     load,
     identify,
   }
-})
+}
 
 export { autopilot }

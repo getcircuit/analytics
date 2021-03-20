@@ -3,14 +3,13 @@ import type {
   IdentifyOptions,
   TrackEventOptions,
 } from '../../types'
-import { createPlugin } from '../../modules/plugin'
 import { addFacebookScript } from './script'
 
 type Options = {
   pixelId: string
 }
 
-const facebookPixel = createPlugin('facebook-pixel', ({ pixelId }: Options) => {
+const facebookPixel = ({ pixelId }: Options) => {
   function load() {
     return addFacebookScript({ pixelId })
   }
@@ -35,12 +34,13 @@ const facebookPixel = createPlugin('facebook-pixel', ({ pixelId }: Options) => {
   }
 
   return {
+    name: 'facebook-pixel',
     load,
     unload,
     event,
     pageview,
     identify,
   }
-})
+}
 
 export { facebookPixel }

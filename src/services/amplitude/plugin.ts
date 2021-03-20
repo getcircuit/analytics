@@ -1,16 +1,16 @@
 import type {
+  SharedContext,
   IdentifyOptions,
   PageviewOptions,
   TrackEventOptions,
 } from '../../types'
-import { createPlugin } from '../../modules/plugin'
 import { addAmplitudeScript } from './script'
 
 type Options = {
   apiKey: string
 }
 
-const amplitude = createPlugin('amplitude', ({ apiKey }: Options, context) => {
+const amplitude = ({ apiKey }: Options) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let sdk: any
 
@@ -34,9 +34,14 @@ const amplitude = createPlugin('amplitude', ({ apiKey }: Options, context) => {
     return sdk.logEvent('Pageview', options)
   }
 
-  function identify({ id, uid, phone, email, displayName }: IdentifyOptions) {
+  function identify(
+    this: SharedContext,
+    { id, uid, phone, email, displayName }: IdentifyOptions,
+  ) {
     sdk.setUserId(id)
-    sdk.setVersionName(context.appVersion)
+    if (this.meta.appVersion) {
+      sdk.setVersionName(this.meta.appVersion)
+    }
 
     return trackAttributes({
       id,
@@ -57,6 +62,7 @@ const amplitude = createPlugin('amplitude', ({ apiKey }: Options, context) => {
   }
 
   return {
+    name: 'amplitude',
     load,
     unload,
     event,
@@ -64,6 +70,6 @@ const amplitude = createPlugin('amplitude', ({ apiKey }: Options, context) => {
     identify,
     anonymize,
   }
-})
+}
 
 export { amplitude }
