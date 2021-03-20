@@ -1,52 +1,84 @@
 import type {
+  SharedContext,
   AnalyticsWrapperOptions,
   PageviewOptions,
   TrackEventOptions,
-  ServicePlugin,
+  LoadedPlugin,
+  PluginMethods,
 } from '../types'
-import { loadService, unloadService } from './plugin'
 import { allSettled } from './utils'
 
-function Analytics<PluginId extends string>(
-  options: AnalyticsWrapperOptions<PluginId>,
-) {
-  type PluginIds = PluginId[]
+type TrackMethodOptions<Plugins = string[]> = {
+  include?: Plugins
+  exclude?: Plugins
+}
 
-  const context = {
-    debug: options.debug,
-    appVersion: options.appVersion,
+function Analytics<PluginName extends string>(
+  options: AnalyticsWrapperOptions<PluginName>,
+) {
+  type PluginNames = PluginName[]
+
+  const sharedContext: SharedContext = {
+    meta: {
+      debug: options.debug,
+      appVersion: options.appVersion,
+      env: options.env,
+    },
   }
 
   // initiate all plugins with the current context
-  const plugins = options.plugins.map((plugin) => plugin(context))
+  const plugins = options.plugins.map((pluginImplementation) => {
+    const plugin = pluginImplementation as LoadedPlugin<PluginName>
+
+    plugin.context = {
+      loaded: false,
+      loadPromise: undefined,
+    }
+
+    return Object.freeze(plugin) as LoadedPlugin<PluginName>
+  })
+
+  /** Execute a method in all supported plugins */
+  function exec<Name extends keyof PluginMethods>(
+    methodName: Name,
+    args: unknown,
+    { include, exclude }: TrackMethodOptions = {},
+  ) {
+    return allSettled(
+      plugins.map(async (plugin) => {
+        const method = plugin[methodName]
+
+        if (
+          typeof method !== 'function' ||
+          include?.includes(plugin.name) === false ||
+          exclude?.includes(plugin.name) === true
+        ) {
+          return
+        }
+
+        if (!plugin.context.loaded) await loadService(plugin)
+
+        // @ts-expect-error - Bleh
+        return method.call(sharedContext, args)
+      }),
+    )
+  }
 
   function event(
     eventArgs: TrackEventOptions,
-    { services }: { services?: PluginIds } = {},
+    trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     // istanbul ignore next
     if (options.debug) {
       console.info(`Sending event: ${JSON.stringify(eventArgs)}`)
     }
 
-    return allSettled(
-      plugins.map(async (plugin) => {
-        if (plugin.event == null) return
-        if (services != null && !services?.includes(plugin.id)) return
-        if (services == null && plugin.explicitUseOnly?.includes('event')) {
-          return
-        }
-
-        if (!plugin.ctx.loaded) await loadService(plugin)
-
-        return plugin.event(eventArgs)
-      }),
-    )
+    return exec('event', eventArgs, trackingOptions)
   }
 
   function pageview(
     args?: PageviewOptions | null,
-    { services }: { services?: PluginIds } = {},
+    trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     const pageviewArgs = {
       page: document.location.pathname,
@@ -58,62 +90,58 @@ function Analytics<PluginId extends string>(
       console.info(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
     }
 
-    return allSettled(
-      plugins.map(async (plugin) => {
-        if (plugin.pageview == null) return
-        if (services != null && !services?.includes(plugin.id)) return
-        if (services == null && plugin.explicitUseOnly?.includes('pageview')) {
-          return
-        }
-
-        if (!plugin.ctx.loaded) await loadService(plugin)
-
-        return plugin.pageview(pageviewArgs)
-      }),
-    )
+    return exec('pageview', pageviewArgs, trackingOptions)
   }
 
   function identify(
     user: Record<string, unknown>,
-    { services }: { services?: PluginIds } = {},
+    trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     // istanbul ignore next
     if (options.debug) {
       console.info(`Identifying user: ${JSON.stringify(user)}`)
     }
 
-    return allSettled(
-      plugins.map(async (plugin) => {
-        if (plugin.identify == null) return
-        if (services != null && !services?.includes(plugin.id)) return
-        if (services == null && plugin.explicitUseOnly?.includes('identify')) {
-          return
-        }
+    return exec('identify', user, trackingOptions)
+  }
 
-        if (!plugin.ctx.loaded) await loadService(plugin)
+  function loadService(plugin: LoadedPlugin) {
+    if (plugin.context.loadPromise == null && !plugin.context.loaded) {
+      plugin.context.loadPromise = Promise.resolve(
+        plugin.load.call(sharedContext),
+      ).then(() => {
+        plugin.context.loaded = true
+        plugin.context.loadPromise = undefined
+      })
+    }
 
-        return plugin.identify(user)
-      }),
-    )
+    return Promise.resolve(plugin.context.loadPromise)
+  }
+
+  function unloadService(plugin: LoadedPlugin) {
+    plugin.context.loaded = false
+    plugin.context.loadPromise = undefined
+
+    return Promise.resolve(plugin.unload?.call(sharedContext))
   }
 
   function loadServices() {
-    return allSettled(plugins.map(loadService))
+    return allSettled(plugins.map((plugin) => loadService(plugin)))
   }
 
   function unloadServices() {
-    return allSettled(plugins.map(unloadService))
+    return allSettled(plugins.map((plugin) => unloadService(plugin)))
   }
 
   return {
     plugins: plugins.reduce(
       (acc, plugin) => {
-        acc[plugin.id as PluginId] = plugin
+        acc[plugin.name as PluginName] = plugin
 
         return acc
       },
       {} as {
-        [key in PluginId]: ServicePlugin<key>
+        [key in PluginName]: LoadedPlugin<key>
       },
     ),
     loadServices,
