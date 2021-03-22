@@ -1,4 +1,5 @@
 import type {
+  SharedContext,
   IdentifyOptions,
   PageviewOptions,
   TrackEventOptions,
@@ -7,15 +8,17 @@ import { addFullstoryScript } from './script'
 
 type Options = {
   org: string
-  debug?: boolean
 }
 
 const FS_SESSION_KEY = 'fullstory-session-url'
 const FS_UID_KEY = 'fullstory-session-uid'
 
-const fullstory = ({ org, debug }: Options) => {
-  function load() {
-    return addFullstoryScript({ org, debug })
+const fullstory = ({ org }: Options) => {
+  function load(this: SharedContext) {
+    return addFullstoryScript({
+      org,
+      debug: this.meta.debug,
+    })
   }
 
   function unload() {

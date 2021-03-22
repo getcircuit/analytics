@@ -1,4 +1,4 @@
-export type MaybePromise<T> = Promise<T> | T
+export type MaybePromise<T = unknown> = Promise<T> | T
 
 export type TrackEventOptions = {
   label: string
@@ -25,15 +25,15 @@ export type TraceOptions = {
 }
 
 export type PluginHooks = {
-  load: () => MaybePromise<unknown>
-  unload?: () => MaybePromise<unknown>
-  pageview?: (opts: PageviewOptions) => MaybePromise<unknown>
-  event?: (opts: TrackEventOptions) => MaybePromise<unknown>
-  identify?: (opts: IdentifyOptions) => MaybePromise<unknown>
-  anonymize?: () => MaybePromise<unknown>
-  info?: (opts: TraceOptions) => MaybePromise<unknown>
-  warn?: (opts: TraceOptions) => MaybePromise<unknown>
-  error?: (opts: TraceOptions) => MaybePromise<unknown>
+  load: () => MaybePromise
+  unload?: () => MaybePromise
+  pageview?: (opts: PageviewOptions) => MaybePromise
+  event?: (opts: TrackEventOptions) => MaybePromise
+  identify?: (opts: IdentifyOptions) => MaybePromise
+  anonymize?: () => MaybePromise
+  info?: (opts: TraceOptions) => MaybePromise
+  warn?: (opts: TraceOptions) => MaybePromise
+  error?: (opts: TraceOptions) => MaybePromise
 }
 
 export type Plugin<PluginName extends string = string> = {
@@ -58,8 +58,9 @@ export type SharedContext = {
 }
 
 export type AnalyticsWrapperOptions<PluginName extends string> = {
-  plugins: Array<Plugin<PluginName>>
   env?: string
   appVersion?: string
+  plugins: Array<Plugin<PluginName>>
   debug?: boolean
+  trackWhenEnv?: string
 }

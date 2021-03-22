@@ -6,30 +6,34 @@ import type {
   TrackEventOptions,
   LoadedPlugin,
   PluginHooks,
-} from '../types'
-import { allSettled } from './utils'
+} from './types'
+import { allSettled } from './modules/utils'
 
 type TrackMethodOptions<Plugins = string[]> = {
   include?: Plugins
   exclude?: Plugins
 }
 
-function Analytics<PluginName extends string>(
-  options: AnalyticsWrapperOptions<PluginName>,
-) {
+function Analytics<PluginName extends string>({
+  debug,
+  appVersion,
+  env,
+  trackWhenEnv = 'production',
+  plugins: pluginImplementations,
+}: AnalyticsWrapperOptions<PluginName>) {
   type PluginNames = PluginName[]
 
   const sharedContext: SharedContext = {
     meta: {
-      debug: options.debug,
-      appVersion: options.appVersion,
-      env: options.env,
+      debug,
+      appVersion,
+      env,
     },
   }
 
   // initiate all plugins with the current context
-  const plugins = options.plugins.map((pluginImplementation) => {
-    const plugin = pluginImplementation as LoadedPlugin<PluginName>
+  const plugins = pluginImplementations.map((pluginImplementation) => {
+    const plugin = { ...pluginImplementation } as LoadedPlugin<PluginName>
 
     plugin.context = {
       loaded: false,
@@ -45,6 +49,8 @@ function Analytics<PluginName extends string>(
     args: unknown,
     { include, exclude }: TrackMethodOptions = {},
   ) {
+    if (env != null && env !== trackWhenEnv) return
+
     return allSettled(
       plugins.map(async (plugin) => {
         const method = plugin[methodName]
@@ -70,7 +76,7 @@ function Analytics<PluginName extends string>(
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     // istanbul ignore next
-    if (options.debug) {
+    if (debug) {
       console.info(`Sending event: ${JSON.stringify(eventArgs)}`)
     }
 
@@ -87,7 +93,7 @@ function Analytics<PluginName extends string>(
     }
 
     // istanbul ignore next
-    if (options.debug) {
+    if (debug) {
       console.info(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
     }
 
@@ -99,7 +105,7 @@ function Analytics<PluginName extends string>(
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     // istanbul ignore next
-    if (options.debug) {
+    if (debug) {
       console.info(`Identifying user: ${JSON.stringify(user)}`)
     }
 
@@ -108,7 +114,7 @@ function Analytics<PluginName extends string>(
 
   function anonymize(trackingOptions: TrackMethodOptions<PluginNames> = {}) {
     // istanbul ignore next
-    if (options.debug) {
+    if (debug) {
       console.info(`Anonymizing user`)
     }
 
@@ -120,7 +126,7 @@ function Analytics<PluginName extends string>(
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     // istanbul ignore next
-    if (options.debug) {
+    if (debug) {
       console.info(`Sending error: ${JSON.stringify(traceOptions)}`)
     }
 
@@ -132,7 +138,7 @@ function Analytics<PluginName extends string>(
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     // istanbul ignore next
-    if (options.debug) {
+    if (debug) {
       console.info(`Sending warning: ${JSON.stringify(traceOptions)}`)
     }
 
@@ -144,7 +150,7 @@ function Analytics<PluginName extends string>(
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
     // istanbul ignore next
-    if (options.debug) {
+    if (debug) {
       console.info(`Sending info: ${JSON.stringify(traceOptions)}`)
     }
 
