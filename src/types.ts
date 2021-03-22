@@ -40,7 +40,7 @@ export type Plugin<PluginName extends string = string> = {
   unload?: () => MaybePromise
 } & PluginHooks
 
-export type LoadedPlugin<
+export type InitializedPlugin<
   PluginName extends string = string
 > = Plugin<PluginName> & {
   context: {
