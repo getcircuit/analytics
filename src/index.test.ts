@@ -104,9 +104,7 @@ describe('plugin hooks', () => {
       ],
     })
 
-    await analytics.event({
-      label: 'click',
-    })
+    await analytics.event({ label: 'click' })
 
     expect(analytics.plugins.sampleService1.event).toHaveBeenCalledWith({
       label: 'click',
@@ -185,6 +183,60 @@ describe('plugin hooks', () => {
 
     expect(analytics.plugins.sampleService1.anonymize).toHaveBeenCalled()
     expect(analytics.plugins.sampleService2.anonymize).toHaveBeenCalled()
+  })
+
+  it('runs "error" hook of supported plugins', async () => {
+    const analytics = Analytics({
+      plugins: [
+        getMockPlugin({ name: 'sampleService1' }),
+        getMockPlugin({ name: 'sampleService2' }),
+      ],
+    })
+
+    await analytics.error({ message: 'Some error' })
+
+    expect(analytics.plugins.sampleService1.error).toHaveBeenCalledWith({
+      message: 'Some error',
+    })
+    expect(analytics.plugins.sampleService2.error).toHaveBeenCalledWith({
+      message: 'Some error',
+    })
+  })
+
+  it('runs "warn" hook of supported plugins', async () => {
+    const analytics = Analytics({
+      plugins: [
+        getMockPlugin({ name: 'sampleService1' }),
+        getMockPlugin({ name: 'sampleService2' }),
+      ],
+    })
+
+    await analytics.warn({ message: 'Some warning' })
+
+    expect(analytics.plugins.sampleService1.warn).toHaveBeenCalledWith({
+      message: 'Some warning',
+    })
+    expect(analytics.plugins.sampleService2.warn).toHaveBeenCalledWith({
+      message: 'Some warning',
+    })
+  })
+
+  it('runs "info" hook of supported plugins', async () => {
+    const analytics = Analytics({
+      plugins: [
+        getMockPlugin({ name: 'sampleService1' }),
+        getMockPlugin({ name: 'sampleService2' }),
+      ],
+    })
+
+    await analytics.warn({ message: 'Some info' })
+
+    expect(analytics.plugins.sampleService1.warn).toHaveBeenCalledWith({
+      message: 'Some info',
+    })
+    expect(analytics.plugins.sampleService2.warn).toHaveBeenCalledWith({
+      message: 'Some info',
+    })
   })
 
   it('does not run hook of excluded plugin', async () => {
@@ -274,5 +326,42 @@ describe('plugin hooks', () => {
     expect(plugin2.pageview).toReturnWith(
       expect.objectContaining(expectedContext),
     )
+  })
+})
+
+test('only runs actual tracking on environment defined in "trackWhenEnv"', async () => {
+  const plugins = [
+    getMockPlugin({ name: 'sampleService1' }),
+    getMockPlugin({ name: 'sampleService2' }),
+  ]
+
+  let analytics = Analytics({
+    env: 'not-potato',
+    trackWhenEnv: 'potato',
+    plugins,
+  })
+
+  await analytics.event({ label: 'click' })
+
+  expect(analytics.plugins.sampleService1.event).not.toHaveBeenCalledWith({
+    label: 'click',
+  })
+  expect(analytics.plugins.sampleService2.event).not.toHaveBeenCalledWith({
+    label: 'click',
+  })
+
+  analytics = Analytics({
+    env: 'potato',
+    trackWhenEnv: 'potato',
+    plugins,
+  })
+
+  await analytics.event({ label: 'click' })
+
+  expect(analytics.plugins.sampleService1.event).toHaveBeenCalledWith({
+    label: 'click',
+  })
+  expect(analytics.plugins.sampleService2.event).toHaveBeenCalledWith({
+    label: 'click',
   })
 })

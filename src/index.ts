@@ -1,4 +1,4 @@
-export { Analytics } from './modules/analytics'
+export { Analytics } from './analytics'
 
 export { facebookPixel } from './services/facebook/plugin'
 export { googleAnalytics } from './services/google-analytics/plugin'

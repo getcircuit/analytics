@@ -24,12 +24,12 @@ const helpscout = ({ apiKey }: Options) => {
   }
 
   // @TODO Not supported yet by Beacon SDK
-  function event({ label, ..._options }: TrackEventOptions) {
-    //   this.assert('trackEvent', 'name', name);
-    //   this._super(...arguments);
-    //   options.error = error;
-    //   return window.Beacon('event', { name: label, options });
-  }
+  // function event({ label, ..._options }: TrackEventOptions) {
+  //   this.assert('trackEvent', 'name', name);
+  //   this._super(...arguments);
+  //   options.error = error;
+  //   return window.Beacon('event', { name: label, options });
+  // }
 
   function pageview({ page, title, location }: PageviewOptions) {
     window.Beacon('suggest')
@@ -57,7 +57,6 @@ const helpscout = ({ apiKey }: Options) => {
     name: 'helpscout',
     load,
     unload,
-    event,
     pageview,
     identify,
     anonymize,
