@@ -4,7 +4,7 @@ import type {
   AnalyticsWrapperOptions,
   PageviewOptions,
   TrackEventOptions,
-  LoadedPlugin,
+  InitializedPlugin,
   PluginHooks,
 } from './types'
 import { allSettled } from './modules/utils'
@@ -34,7 +34,7 @@ function Analytics<PluginName extends string>({
 
   // initiate all plugins with the current context
   const plugins = pluginImplementations.map((pluginImplementation) => {
-    const plugin = { ...pluginImplementation } as LoadedPlugin<PluginName>
+    const plugin = { ...pluginImplementation } as InitializedPlugin<PluginName>
 
     plugin.context = {
       loaded: false,
@@ -46,13 +46,11 @@ function Analytics<PluginName extends string>({
 
   if (debug) {
     console.debug(
-      `Analytics abstraction layer plugins: ${plugins
-        .map((pl) => pl.name)
-        .join(', ')}`,
+      `Analytics plugins: "${plugins.map((pl) => pl.name).join('", "')}"`,
     )
   }
 
-  /** Execute a method in all supported plugins */
+  /** Execute a hook in all supported plugins */
   function runHook<Hook extends keyof PluginHooks>(
     hook: Hook,
     args: unknown,
@@ -170,7 +168,7 @@ function Analytics<PluginName extends string>({
     return runHook('info', traceOptions, trackingOptions)
   }
 
-  function loadService(plugin: LoadedPlugin) {
+  function loadService(plugin: InitializedPlugin) {
     if (plugin.context.loadPromise == null && !plugin.context.loaded) {
       plugin.context.loadPromise = Promise.resolve(
         plugin.load.call(sharedContext),
@@ -183,7 +181,7 @@ function Analytics<PluginName extends string>({
     return Promise.resolve(plugin.context.loadPromise)
   }
 
-  function unloadService(plugin: LoadedPlugin) {
+  function unloadService(plugin: InitializedPlugin) {
     plugin.context.loaded = false
     plugin.context.loadPromise = undefined
 
@@ -206,7 +204,7 @@ function Analytics<PluginName extends string>({
         return acc
       },
       {} as {
-        [Key in PluginName]: LoadedPlugin<Key>
+        [Key in PluginName]: InitializedPlugin<Key>
       },
     ),
     loadServices,
