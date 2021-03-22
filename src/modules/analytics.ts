@@ -1,10 +1,11 @@
 import type {
+  TraceOptions,
   SharedContext,
   AnalyticsWrapperOptions,
   PageviewOptions,
   TrackEventOptions,
   LoadedPlugin,
-  PluginMethods,
+  PluginHooks,
 } from '../types'
 import { allSettled } from './utils'
 
@@ -35,11 +36,11 @@ function Analytics<PluginName extends string>(
       loadPromise: undefined,
     }
 
-    return Object.freeze(plugin) as LoadedPlugin<PluginName>
+    return Object.freeze(plugin)
   })
 
   /** Execute a method in all supported plugins */
-  function exec<Name extends keyof PluginMethods>(
+  function runHook<Name extends keyof PluginHooks>(
     methodName: Name,
     args: unknown,
     { include, exclude }: TrackMethodOptions = {},
@@ -58,7 +59,7 @@ function Analytics<PluginName extends string>(
 
         if (!plugin.context.loaded) await loadService(plugin)
 
-        // @ts-expect-error - Bleh
+        // @ts-expect-error - TS doesn't connect the passed args to the method we're executing
         return method.call(sharedContext, args)
       }),
     )
@@ -73,7 +74,7 @@ function Analytics<PluginName extends string>(
       console.info(`Sending event: ${JSON.stringify(eventArgs)}`)
     }
 
-    return exec('event', eventArgs, trackingOptions)
+    return runHook('event', eventArgs, trackingOptions)
   }
 
   function pageview(
@@ -90,7 +91,7 @@ function Analytics<PluginName extends string>(
       console.info(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
     }
 
-    return exec('pageview', pageviewArgs, trackingOptions)
+    return runHook('pageview', pageviewArgs, trackingOptions)
   }
 
   function identify(
@@ -102,7 +103,52 @@ function Analytics<PluginName extends string>(
       console.info(`Identifying user: ${JSON.stringify(user)}`)
     }
 
-    return exec('identify', user, trackingOptions)
+    return runHook('identify', user, trackingOptions)
+  }
+
+  function anonymize(trackingOptions: TrackMethodOptions<PluginNames> = {}) {
+    // istanbul ignore next
+    if (options.debug) {
+      console.info(`Anonymizing user`)
+    }
+
+    return runHook('anonymize', undefined, trackingOptions)
+  }
+
+  function error(
+    traceOptions: TraceOptions,
+    trackingOptions: TrackMethodOptions<PluginNames> = {},
+  ) {
+    // istanbul ignore next
+    if (options.debug) {
+      console.info(`Sending error: ${JSON.stringify(traceOptions)}`)
+    }
+
+    return runHook('error', traceOptions, trackingOptions)
+  }
+
+  function warn(
+    traceOptions: TraceOptions,
+    trackingOptions: TrackMethodOptions<PluginNames> = {},
+  ) {
+    // istanbul ignore next
+    if (options.debug) {
+      console.info(`Sending warning: ${JSON.stringify(traceOptions)}`)
+    }
+
+    return runHook('warn', traceOptions, trackingOptions)
+  }
+
+  function info(
+    traceOptions: TraceOptions,
+    trackingOptions: TrackMethodOptions<PluginNames> = {},
+  ) {
+    // istanbul ignore next
+    if (options.debug) {
+      console.info(`Sending info: ${JSON.stringify(traceOptions)}`)
+    }
+
+    return runHook('info', traceOptions, trackingOptions)
   }
 
   function loadService(plugin: LoadedPlugin) {
@@ -141,7 +187,7 @@ function Analytics<PluginName extends string>(
         return acc
       },
       {} as {
-        [key in PluginName]: LoadedPlugin<key>
+        [Key in PluginName]: LoadedPlugin<Key>
       },
     ),
     loadServices,
@@ -149,10 +195,10 @@ function Analytics<PluginName extends string>(
     event,
     pageview,
     identify,
-    anonymize({ anonymousId }: { anonymousId?: string } = {}) {
-      // todo: this params
-      return this.identify({ userId: null, anonymousId })
-    },
+    error,
+    warn,
+    info,
+    anonymize,
   }
 }
 
