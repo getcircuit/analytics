@@ -62,7 +62,7 @@ const amplitude = ({ apiKey }: Options) => {
   }
 
   return {
-    name: 'amplitude',
+    name: 'amplitude' as const,
     load,
     unload,
     event,

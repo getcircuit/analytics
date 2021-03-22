@@ -43,7 +43,7 @@ const autopilot = ({ apiKey }: Options) => {
   }
 
   return {
-    name: 'autopilot',
+    name: 'autopilot' as const,
     load,
     identify,
   }

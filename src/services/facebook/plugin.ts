@@ -34,7 +34,7 @@ const facebookPixel = ({ pixelId }: Options) => {
   }
 
   return {
-    name: 'facebook-pixel',
+    name: 'facebook-pixel' as const,
     load,
     unload,
     event,

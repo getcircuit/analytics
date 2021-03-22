@@ -291,6 +291,68 @@ describe('plugin hooks', () => {
     expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(1)
   })
 
+  it('does not run service hook defined to be used only explicitly', async () => {
+    const analytics = Analytics({
+      plugins: [
+        getMockPlugin({ name: 'event' }),
+        getMockPlugin({ name: 'pageview' }),
+        getMockPlugin({ name: 'identify' }),
+      ],
+      explicitUse: {
+        event: ['event'],
+        pageview: ['pageview'],
+        identify: ['identify'],
+      },
+    })
+
+    await analytics.event({ label: 'potato' })
+    await analytics.pageview(null)
+    await analytics.identify({})
+
+    expect(analytics.plugins.event.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.event).toHaveBeenCalledTimes(1)
+
+    expect(analytics.plugins.event.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.pageview).toHaveBeenCalledTimes(1)
+
+    expect(analytics.plugins.event.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(0)
+  })
+
+  it('runs explicitly defined service hook', async () => {
+    const analytics = Analytics({
+      plugins: [
+        getMockPlugin({ name: 'event' }),
+        getMockPlugin({ name: 'pageview' }),
+        getMockPlugin({ name: 'identify' }),
+      ],
+      explicitUse: {
+        event: ['event'],
+        pageview: ['pageview'],
+        identify: ['identify'],
+      },
+    })
+
+    await analytics.event({ label: 'potato' }, { include: ['event'] })
+    await analytics.pageview(null, { include: ['pageview'] })
+    await analytics.identify({}, { include: ['identify'] })
+
+    expect(analytics.plugins.event.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.event).toHaveBeenCalledTimes(0)
+
+    expect(analytics.plugins.event.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.pageview).toHaveBeenCalledTimes(0)
+
+    expect(analytics.plugins.event.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(1)
+  })
+
   it('passes shared context to hooks', async () => {
     const plugin1 = {
       name: 'plugin1',
@@ -309,13 +371,13 @@ describe('plugin hooks', () => {
     }
 
     const analytics = Analytics({
-      debug: true,
+      debug: false,
       appVersion: '1.0.0',
       plugins: [plugin1, plugin2],
     })
 
     const expectedContext = {
-      meta: { appVersion: '1.0.0', debug: true, env: undefined },
+      meta: { appVersion: '1.0.0', debug: false, env: undefined },
     }
 
     await analytics.pageview()

@@ -59,7 +59,7 @@ const bugsnag = ({ client }: Options) => {
   }
 
   return {
-    name: 'bugsnag',
+    name: 'bugsnag' as const,
     load,
     event,
     identify,
