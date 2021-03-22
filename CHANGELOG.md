@@ -1,3 +1,12 @@
+## [0.0.11](https://github.com/getcircuit/analytics/compare/v0.0.10...v0.0.11) (2021-03-22)
+
+
+### Features
+
+* add explicitUse prop ([09bc355](https://github.com/getcircuit/analytics/commit/09bc355f382afbcc7be16b3d29a67f1e65a5e721))
+
+
+
 ## [0.0.10](https://github.com/getcircuit/analytics/compare/v0.0.9...v0.0.10) (2021-03-22)
 
 
