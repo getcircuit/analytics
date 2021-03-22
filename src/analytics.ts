@@ -19,6 +19,7 @@ function Analytics<PluginName extends string>({
   appVersion,
   env,
   trackWhenEnv = 'production',
+  explicitUse,
   plugins: pluginImplementations,
 }: AnalyticsWrapperOptions<PluginName>) {
   type PluginNames = PluginName[]
@@ -43,22 +44,34 @@ function Analytics<PluginName extends string>({
     return Object.freeze(plugin)
   })
 
+  if (debug) {
+    console.debug(
+      `Analytics abstraction layer plugins: ${plugins
+        .map((pl) => pl.name)
+        .join(', ')}`,
+    )
+  }
+
   /** Execute a method in all supported plugins */
-  function runHook<Name extends keyof PluginHooks>(
-    methodName: Name,
+  function runHook<Hook extends keyof PluginHooks>(
+    hook: Hook,
     args: unknown,
     { include, exclude }: TrackMethodOptions = {},
   ) {
-    if (env != null && env !== trackWhenEnv) return
+    if (env != null && env !== trackWhenEnv) {
+      return
+    }
 
     return allSettled(
       plugins.map(async (plugin) => {
-        const method = plugin[methodName]
+        const method = plugin[hook]
 
+        if (typeof method !== 'function') return
+        if (include?.includes(plugin.name) === false) return
+        if (exclude?.includes(plugin.name) === true) return
         if (
-          typeof method !== 'function' ||
-          include?.includes(plugin.name) === false ||
-          exclude?.includes(plugin.name) === true
+          explicitUse?.[hook]?.includes(plugin.name) &&
+          !include?.includes(plugin.name)
         ) {
           return
         }
@@ -77,7 +90,7 @@ function Analytics<PluginName extends string>({
   ) {
     // istanbul ignore next
     if (debug) {
-      console.info(`Sending event: ${JSON.stringify(eventArgs)}`)
+      console.debug(`Sending event: ${JSON.stringify(eventArgs)}`)
     }
 
     return runHook('event', eventArgs, trackingOptions)
@@ -94,7 +107,7 @@ function Analytics<PluginName extends string>({
 
     // istanbul ignore next
     if (debug) {
-      console.info(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
+      console.debug(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
     }
 
     return runHook('pageview', pageviewArgs, trackingOptions)
@@ -106,7 +119,7 @@ function Analytics<PluginName extends string>({
   ) {
     // istanbul ignore next
     if (debug) {
-      console.info(`Identifying user: ${JSON.stringify(user)}`)
+      console.debug(`Identifying user: ${JSON.stringify(user)}`)
     }
 
     return runHook('identify', user, trackingOptions)
@@ -115,7 +128,7 @@ function Analytics<PluginName extends string>({
   function anonymize(trackingOptions: TrackMethodOptions<PluginNames> = {}) {
     // istanbul ignore next
     if (debug) {
-      console.info(`Anonymizing user`)
+      console.debug(`Anonymizing user`)
     }
 
     return runHook('anonymize', undefined, trackingOptions)
@@ -127,7 +140,7 @@ function Analytics<PluginName extends string>({
   ) {
     // istanbul ignore next
     if (debug) {
-      console.info(`Sending error: ${JSON.stringify(traceOptions)}`)
+      console.debug(`Sending error: ${JSON.stringify(traceOptions)}`)
     }
 
     return runHook('error', traceOptions, trackingOptions)
@@ -139,7 +152,7 @@ function Analytics<PluginName extends string>({
   ) {
     // istanbul ignore next
     if (debug) {
-      console.info(`Sending warning: ${JSON.stringify(traceOptions)}`)
+      console.debug(`Sending warning: ${JSON.stringify(traceOptions)}`)
     }
 
     return runHook('warn', traceOptions, trackingOptions)
@@ -151,7 +164,7 @@ function Analytics<PluginName extends string>({
   ) {
     // istanbul ignore next
     if (debug) {
-      console.info(`Sending info: ${JSON.stringify(traceOptions)}`)
+      console.debug(`Sending info: ${JSON.stringify(traceOptions)}`)
     }
 
     return runHook('info', traceOptions, trackingOptions)

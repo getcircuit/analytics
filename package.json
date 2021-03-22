@@ -16,6 +16,7 @@
   "scripts": {
     "clear": "npx rimraf ./{esm,cjs,types}/",
     "prebuild": "npm run clear",
+    "dev": "yarn build:js -w & yarn build:types --watch",
     "build:types": "tsc -p tsconfig.types.json",
     "build:js": "rollup -c",
     "build": "npm run build:js && npm run build:types",

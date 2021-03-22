@@ -54,7 +54,7 @@ const helpscout = ({ apiKey }: Options) => {
   }
 
   return {
-    name: 'helpscout',
+    name: 'helpscout' as const,
     load,
     unload,
     pageview,

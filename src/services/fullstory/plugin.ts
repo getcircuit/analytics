@@ -85,7 +85,7 @@ const fullstory = ({ org }: Options) => {
   }
 
   return {
-    name: 'fullstory',
+    name: 'fullstory' as const,
     load,
     unload,
     pageview,

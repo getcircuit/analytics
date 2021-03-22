@@ -29,6 +29,15 @@ export const analytics = Analytics({
       pixelId: 'xxxxxxx',
     }),
   ],
+  /**
+   * Optional map of hooks => plugin names.
+   * Any plugin listed here will need to be explicitly included to have the related hook executed.
+   * */
+  explicitUse: {
+    event: [...],
+    pageview: [...],
+    ...,
+  }
 })
 ```
 
