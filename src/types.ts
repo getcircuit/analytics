@@ -11,30 +11,34 @@ export type PageviewOptions = {
   title?: string
 }
 
-export type TrackErrorOptions = {
-  error: string
-  [key: string]: unknown
-}
-
 export type IdentifyOptions = {
   id?: string
   fullName?: string
+  email?: string
+  name?: string
   [key: string]: unknown
 }
 
-export type PluginMethods = {
+export type TraceOptions = {
+  message: string
+  [key: string]: unknown
+}
+
+export type PluginHooks = {
   load: () => MaybePromise<unknown>
   unload?: () => MaybePromise<unknown>
-  error?: (opts: TrackErrorOptions) => MaybePromise<unknown>
   pageview?: (opts: PageviewOptions) => MaybePromise<unknown>
   event?: (opts: TrackEventOptions) => MaybePromise<unknown>
   identify?: (opts: IdentifyOptions) => MaybePromise<unknown>
   anonymize?: () => MaybePromise<unknown>
+  info?: (opts: TraceOptions) => MaybePromise<unknown>
+  warn?: (opts: TraceOptions) => MaybePromise<unknown>
+  error?: (opts: TraceOptions) => MaybePromise<unknown>
 }
 
 export type Plugin<PluginName extends string = string> = {
   name: PluginName
-} & PluginMethods
+} & PluginHooks
 
 export type LoadedPlugin<
   PluginName extends string = string
