@@ -1,3 +1,13 @@
+## [0.0.8](https://github.com/getcircuit/analytics/compare/v0.0.7...v0.0.8) (2021-03-22)
+
+
+### Features
+
+* add bugsnag ([743509d](https://github.com/getcircuit/analytics/commit/743509db1daa62e5ac39e529df099093ac93d0f5))
+* add helpscout ([146c9f6](https://github.com/getcircuit/analytics/commit/146c9f6b994b01babba3a544b9973086b4b82ba2))
+
+
+
 ## [0.0.7](https://github.com/getcircuit/analytics/compare/v0.0.6...v0.0.7) (2021-03-19)
 
 
