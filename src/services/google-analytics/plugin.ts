@@ -67,7 +67,7 @@ const googleAnalytics = ({ trackingId, debug }: Options) => {
   }
 
   return {
-    name: 'google-analytics',
+    name: 'google-analytics' as const,
     load,
     unload,
     event,

@@ -25,8 +25,6 @@ export type TraceOptions = {
 }
 
 export type PluginHooks = {
-  load: () => MaybePromise
-  unload?: () => MaybePromise
   pageview?: (opts: PageviewOptions) => MaybePromise
   event?: (opts: TrackEventOptions) => MaybePromise
   identify?: (opts: IdentifyOptions) => MaybePromise
@@ -38,6 +36,8 @@ export type PluginHooks = {
 
 export type Plugin<PluginName extends string = string> = {
   name: PluginName
+  load: () => MaybePromise
+  unload?: () => MaybePromise
 } & PluginHooks
 
 export type LoadedPlugin<
@@ -63,4 +63,7 @@ export type AnalyticsWrapperOptions<PluginName extends string> = {
   plugins: Array<Plugin<PluginName>>
   debug?: boolean
   trackWhenEnv?: string
+  explicitUse?: {
+    [key in keyof PluginHooks]: PluginName[]
+  }
 }
