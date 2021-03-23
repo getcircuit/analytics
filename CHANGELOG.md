@@ -1,3 +1,23 @@
+## 0.0.13 (2021-03-23)
+
+
+### Bug Fixes
+
+* pass appversion to amplitude plugin ([1a17797](https://github.com/getcircuit/analytics/commit/1a177973f0e72f8716279f2681f04c00c941e0e5))
+
+
+### Features
+
+* add assertion helpers ([9519a83](https://github.com/getcircuit/analytics/commit/9519a83a7c7b2ef696aa2c99f5d1609230371012))
+* add autopilot ([a2b10e0](https://github.com/getcircuit/analytics/commit/a2b10e0318be7f848237cd1ffdb8fb9478931b6f))
+* add bugsnag ([4848054](https://github.com/getcircuit/analytics/commit/484805495c95c0a4153eca5d499d796db65ba2d6))
+* add explicitUse prop ([35fddd0](https://github.com/getcircuit/analytics/commit/35fddd03b548754d830783910bf26bcc9d14beaa))
+* add helpscout ([651d717](https://github.com/getcircuit/analytics/commit/651d717758caa8fbd9dd5220731e2e13b8ea8b4a))
+* amplitude plugin ([c4a7869](https://github.com/getcircuit/analytics/commit/c4a786991648ac167f723b8832c3c7275f2f38f0))
+* pass context to plugins ([521cb5f](https://github.com/getcircuit/analytics/commit/521cb5f17f773cbb11aadcc79fa9175631d0b4d9))
+
+
+
 ## [0.0.12](https://github.com/getcircuit/analytics/compare/v0.0.11...v0.0.12) (2021-03-22)
 
 
