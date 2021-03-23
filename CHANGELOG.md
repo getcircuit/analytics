@@ -1,3 +1,12 @@
+## [0.0.15](https://github.com/getcircuit/analytics/compare/v0.0.13...v0.0.15) (2021-03-23)
+
+
+### Bug Fixes
+
+* remove unneeded optional operators ([bd9b233](https://github.com/getcircuit/analytics/commit/bd9b233dc3f61e9770c9ae2d941f14293da05bdf))
+
+
+
 ## [0.0.14](https://github.com/getcircuit/analytics/compare/v0.0.13...v0.0.14) (2021-03-23)
 
 
