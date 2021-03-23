@@ -1,13 +1,14 @@
 import type {
   TraceOptions,
-  SharedContext,
+  PluginContext,
   AnalyticsWrapperOptions,
   PageviewOptions,
   TrackEventOptions,
   InitializedPlugin,
   PluginHooks,
+  IdentifyOptions,
 } from './types'
-import { allSettled } from './modules/utils'
+import { allSettled, getHookAssertionHelpers } from './modules/utils'
 
 type TrackMethodOptions<Plugins = string[]> = {
   include?: Plugins
@@ -24,47 +25,71 @@ function Analytics<PluginName extends string>({
 }: AnalyticsWrapperOptions<PluginName>) {
   type PluginNames = PluginName[]
 
-  const sharedContext: SharedContext = {
-    meta: {
-      debug,
-      appVersion,
-      env,
-    },
+  const shouldTrack = env == null || env === trackWhenEnv
+  const configContext = {
+    debug,
+    appVersion,
+    env,
   }
 
   // initiate all plugins with the current context
-  const plugins = pluginImplementations.map((pluginImplementation) => {
-    const plugin = { ...pluginImplementation } as InitializedPlugin<PluginName>
-
-    plugin.context = {
+  const plugins = pluginImplementations.map(({ name, ...hooks }) => {
+    const plugin = {
+      name,
       loaded: false,
       loadPromise: undefined,
-    }
+      hooks,
+    } as InitializedPlugin<PluginName>
 
-    return Object.freeze(plugin)
+    return plugin
   })
 
+  // istanbul ignore next
   if (debug) {
     console.debug(
-      `Analytics plugins: "${plugins.map((pl) => pl.name).join('", "')}"`,
+      `[Analytics] Plugins: "${plugins.map((pl) => pl.name).join('", "')}"`,
+    )
+    console.debug(
+      `[Analytics] Env: ${env}. Tracking ${
+        shouldTrack ? 'enabled' : 'disabled'
+      }.`,
     )
   }
 
+  function runPluginHook(
+    plugin: InitializedPlugin,
+    hook: keyof PluginHooks,
+    args?: unknown,
+  ) {
+    const pluginContext: PluginContext = {
+      config: configContext,
+      ...getHookAssertionHelpers(plugin.name, hook),
+    }
+
+    // @ts-expect-error - TS doesn't connect the passed args to the method we're executing
+    return plugin.hooks[hook]?.call(pluginContext, args)
+  }
+
   /** Execute a hook in all supported plugins */
-  function runHook<Hook extends keyof PluginHooks>(
+  function runHook<Hook extends keyof Omit<PluginHooks, 'load' | 'unload'>>(
     hook: Hook,
     args: unknown,
-    { include, exclude }: TrackMethodOptions = {},
+    { include, exclude }: TrackMethodOptions,
   ) {
-    if (env != null && env !== trackWhenEnv) {
-      return
+    // istanbul ignore next
+    if (debug) {
+      console.debug(
+        `Analytics hook: "${hook}"`,
+        `Args: ${JSON.stringify(args)}`,
+      )
     }
+
+    // istanbul ignore next
+    if (shouldTrack === false) return
 
     return allSettled(
       plugins.map(async (plugin) => {
-        const method = plugin[hook]
-
-        if (typeof method !== 'function') return
+        if (typeof plugin.hooks[hook] !== 'function') return
         if (include?.includes(plugin.name) === false) return
         if (exclude?.includes(plugin.name) === true) return
         if (
@@ -74,10 +99,9 @@ function Analytics<PluginName extends string>({
           return
         }
 
-        if (!plugin.context.loaded) await loadService(plugin)
+        if (!plugin.loaded) await loadService(plugin)
 
-        // @ts-expect-error - TS doesn't connect the passed args to the method we're executing
-        return method.call(sharedContext, args)
+        return runPluginHook(plugin, hook, args)
       }),
     )
   }
@@ -86,11 +110,6 @@ function Analytics<PluginName extends string>({
     eventArgs: TrackEventOptions,
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
-    // istanbul ignore next
-    if (debug) {
-      console.debug(`Sending event: ${JSON.stringify(eventArgs)}`)
-    }
-
     return runHook('event', eventArgs, trackingOptions)
   }
 
@@ -103,32 +122,17 @@ function Analytics<PluginName extends string>({
       ...args,
     }
 
-    // istanbul ignore next
-    if (debug) {
-      console.debug(`Sending pageview: ${JSON.stringify(pageviewArgs)}`)
-    }
-
     return runHook('pageview', pageviewArgs, trackingOptions)
   }
 
   function identify(
-    user: Record<string, unknown>,
+    user: IdentifyOptions,
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
-    // istanbul ignore next
-    if (debug) {
-      console.debug(`Identifying user: ${JSON.stringify(user)}`)
-    }
-
     return runHook('identify', user, trackingOptions)
   }
 
   function anonymize(trackingOptions: TrackMethodOptions<PluginNames> = {}) {
-    // istanbul ignore next
-    if (debug) {
-      console.debug(`Anonymizing user`)
-    }
-
     return runHook('anonymize', undefined, trackingOptions)
   }
 
@@ -136,11 +140,6 @@ function Analytics<PluginName extends string>({
     traceOptions: TraceOptions,
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
-    // istanbul ignore next
-    if (debug) {
-      console.debug(`Sending error: ${JSON.stringify(traceOptions)}`)
-    }
-
     return runHook('error', traceOptions, trackingOptions)
   }
 
@@ -148,11 +147,6 @@ function Analytics<PluginName extends string>({
     traceOptions: TraceOptions,
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
-    // istanbul ignore next
-    if (debug) {
-      console.debug(`Sending warning: ${JSON.stringify(traceOptions)}`)
-    }
-
     return runHook('warn', traceOptions, trackingOptions)
   }
 
@@ -160,32 +154,27 @@ function Analytics<PluginName extends string>({
     traceOptions: TraceOptions,
     trackingOptions: TrackMethodOptions<PluginNames> = {},
   ) {
-    // istanbul ignore next
-    if (debug) {
-      console.debug(`Sending info: ${JSON.stringify(traceOptions)}`)
-    }
-
     return runHook('info', traceOptions, trackingOptions)
   }
 
   function loadService(plugin: InitializedPlugin) {
-    if (plugin.context.loadPromise == null && !plugin.context.loaded) {
-      plugin.context.loadPromise = Promise.resolve(
-        plugin.load.call(sharedContext),
-      ).then(() => {
-        plugin.context.loaded = true
-        plugin.context.loadPromise = undefined
-      })
+    if (plugin.loadPromise == null && !plugin.loaded) {
+      plugin.loadPromise = Promise.resolve(runPluginHook(plugin, 'load')).then(
+        () => {
+          plugin.loaded = true
+          plugin.loadPromise = undefined
+        },
+      )
     }
 
-    return Promise.resolve(plugin.context.loadPromise)
+    return Promise.resolve(plugin.loadPromise)
   }
 
   function unloadService(plugin: InitializedPlugin) {
-    plugin.context.loaded = false
-    plugin.context.loadPromise = undefined
+    plugin.loaded = false
+    plugin.loadPromise = undefined
 
-    return Promise.resolve(plugin.unload?.call(sharedContext))
+    return Promise.resolve(runPluginHook(plugin, 'unload'))
   }
 
   function loadServices() {

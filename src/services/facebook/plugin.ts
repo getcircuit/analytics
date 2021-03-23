@@ -2,6 +2,7 @@ import type {
   PageviewOptions,
   IdentifyOptions,
   TrackEventOptions,
+  PluginContext,
 } from '../../types'
 import { addFacebookScript } from './script'
 
@@ -21,16 +22,33 @@ const facebookPixel = ({ pixelId }: Options) => {
     delete window._fbq
   }
 
-  function event({ label, ...options }: TrackEventOptions) {
+  function event(
+    this: PluginContext,
+    { label, ...options }: TrackEventOptions,
+  ) {
+    this.assertValues({ label })
+
     window?.fbq('track', label, options)
   }
 
-  function pageview({ page }: PageviewOptions) {
-    window?.fbq('track', 'PageView', { page })
+  function pageview(this: PluginContext, args: PageviewOptions) {
+    this.assertKeys(args, ['page'])
+
+    window?.fbq('track', 'PageView', args)
   }
 
-  function identify({ id }: IdentifyOptions) {
-    window.fbq('trackCustom', 'identify', { id })
+  function identify(this: PluginContext, args: IdentifyOptions) {
+    this.assertKeys(args, [
+      'uid',
+      'id',
+      'name',
+      'fullName',
+      'email',
+      'phone',
+      'distinctId',
+    ])
+
+    window.fbq('trackCustom', 'identify', args)
   }
 
   return {

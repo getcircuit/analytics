@@ -1,5 +1,5 @@
 import type {
-  SharedContext,
+  PluginContext,
   IdentifyOptions,
   PageviewOptions,
   TrackEventOptions,
@@ -14,10 +14,10 @@ const FS_SESSION_KEY = 'fullstory-session-url'
 const FS_UID_KEY = 'fullstory-session-uid'
 
 const fullstory = ({ org }: Options) => {
-  function load(this: SharedContext) {
+  function load(this: PluginContext) {
     return addFullstoryScript({
       org,
-      debug: this.meta.debug,
+      debug: this.config.debug,
     })
   }
 
@@ -26,20 +26,29 @@ const fullstory = ({ org }: Options) => {
     delete window.FS
   }
 
-  function event({ label, ...options }: TrackEventOptions) {
+  function event(
+    this: PluginContext,
+    { label, ...options }: TrackEventOptions,
+  ) {
+    this.assertValues({ label })
+
     window.FS.event(label, options)
   }
 
-  function pageview({ page }: PageviewOptions) {
+  function pageview(this: PluginContext, { page }: PageviewOptions) {
+    this.assertValues({ page })
+
     window.FS.event('Page View', { page })
   }
 
-  function identify(userInfo: IdentifyOptions = {}) {
+  function identify(this: PluginContext, userInfo: IdentifyOptions = {}) {
+    this.assertKeys(userInfo, ['id'])
+
     const { id } = userInfo
 
     if (id == null) return
     window.FS.identify(id, userInfo)
-    startSession(userInfo)
+    startSession(id)
   }
 
   function anonymize() {
@@ -48,8 +57,8 @@ const fullstory = ({ org }: Options) => {
     window.FS.identify(false)
   }
 
-  function startSession(userInfo: IdentifyOptions) {
-    const currentSessionUID = userInfo.id
+  function startSession(userId: string) {
+    const currentSessionUID = userId
 
     if (currentSessionUID == null) return
 

@@ -1,5 +1,5 @@
 import type {
-  SharedContext,
+  PluginContext,
   IdentifyOptions,
   PageviewOptions,
   TrackEventOptions,
@@ -26,21 +26,33 @@ const amplitude = ({ apiKey }: Options) => {
     sdk = undefined
   }
 
-  function event({ label, ...options }: TrackEventOptions) {
+  function event(
+    this: PluginContext,
+    { label, ...options }: TrackEventOptions,
+  ) {
+    this.assertValues({ label })
+
     return sdk.logEvent(label, options)
   }
 
-  function pageview({ page, ...options }: PageviewOptions) {
+  function pageview(
+    this: PluginContext,
+    { page, ...options }: PageviewOptions,
+  ) {
+    this.assertValues({ page })
+
     return sdk.logEvent('Pageview', options)
   }
 
   function identify(
-    this: SharedContext,
+    this: PluginContext,
     { id, uid, phone, email, displayName }: IdentifyOptions,
   ) {
+    this.assertValues({ id, uid, phone, email, displayName })
+
     sdk.setUserId(id)
-    if (this.meta.appVersion) {
-      sdk.setVersionName(this.meta.appVersion)
+    if (this.config.appVersion) {
+      sdk.setVersionName(this.config.appVersion)
     }
 
     return trackAttributes({

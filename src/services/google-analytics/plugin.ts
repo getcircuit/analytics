@@ -1,7 +1,9 @@
 import type {
+  PluginContext,
   IdentifyOptions,
   PageviewOptions,
   TrackEventOptions,
+  GenericObject,
 } from '../../types'
 import { addGoogleAnalyticsScript } from './script'
 
@@ -12,7 +14,7 @@ type Options = {
 
 const EVENT_KEYS = ['category', 'action', 'label', 'value']
 
-function gaSend(options: Record<string, unknown>): Promise<void> {
+function gaSend(options: GenericObject): Promise<void> {
   return new Promise((resolve) => {
     window.ga('send', {
       ...options,
@@ -31,22 +33,25 @@ const googleAnalytics = ({ trackingId, debug }: Options) => {
     delete window.ga
   }
 
-  function event(options: TrackEventOptions) {
-    const gaEventProps: Record<string, unknown> = Object.entries(
-      options,
-    ).reduce((acc, [prop, value]) => {
-      for (const key in options) {
-        if (EVENT_KEYS.includes(prop)) {
-          const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1)
+  function event(this: PluginContext, options: TrackEventOptions) {
+    this.assertKeys(options, ['label'])
 
-          gaEventProps[`event${capitalizedKey}`] = value
-        } else {
-          gaEventProps[key] = value
+    const gaEventProps: GenericObject = Object.entries(options).reduce(
+      (acc, [prop, value]) => {
+        for (const key in options) {
+          if (EVENT_KEYS.includes(prop)) {
+            const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1)
+
+            gaEventProps[`event${capitalizedKey}`] = value
+          } else {
+            gaEventProps[key] = value
+          }
         }
-      }
 
-      return acc
-    }, {})
+        return acc
+      },
+      {},
+    )
 
     return gaSend({
       hitType: 'event',
@@ -54,11 +59,18 @@ const googleAnalytics = ({ trackingId, debug }: Options) => {
     })
   }
 
-  function pageview({ page, location, title }: PageviewOptions) {
+  function pageview(
+    this: PluginContext,
+    { page, location, title }: PageviewOptions,
+  ) {
+    this.assertValues({ page, location, title })
+
     return gaSend({ hitType: 'pageview', page, location, title })
   }
 
-  function identify({ id }: IdentifyOptions) {
+  function identify(this: PluginContext, { id }: IdentifyOptions) {
+    this.assertValues({ id })
+
     window.ga('set', 'userId', id)
   }
 

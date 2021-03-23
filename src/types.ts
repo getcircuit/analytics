@@ -1,5 +1,7 @@
 export type MaybePromise<T = unknown> = Promise<T> | T
 
+export type GenericObject<Values = unknown> = Record<string, Values>
+
 export type TrackEventOptions = {
   label: string
   [key: string]: unknown
@@ -12,11 +14,14 @@ export type PageviewOptions = {
 }
 
 export type IdentifyOptions = {
+  uid?: string
   id?: string
+  name?: string
   fullName?: string
   email?: string
-  name?: string
-  [key: string]: unknown
+  phone?: string
+  distinctId?: string
+  displayName?: string
 }
 
 export type TraceOptions = {
@@ -25,36 +30,40 @@ export type TraceOptions = {
 }
 
 export type PluginHooks = {
-  pageview?: (opts: PageviewOptions) => MaybePromise
-  event?: (opts: TrackEventOptions) => MaybePromise
-  identify?: (opts: IdentifyOptions) => MaybePromise
-  anonymize?: () => MaybePromise
-  info?: (opts: TraceOptions) => MaybePromise
-  warn?: (opts: TraceOptions) => MaybePromise
-  error?: (opts: TraceOptions) => MaybePromise
+  load: (this: PluginContext) => MaybePromise
+  unload?: (this: PluginContext) => MaybePromise
+  pageview?: (this: PluginContext, opts: PageviewOptions) => MaybePromise
+  event?: (this: PluginContext, opts: TrackEventOptions) => MaybePromise
+  identify?: (this: PluginContext, opts: IdentifyOptions) => MaybePromise
+  anonymize?: (this: PluginContext) => MaybePromise
+  info?: (this: PluginContext, opts: TraceOptions) => MaybePromise
+  warn?: (this: PluginContext, opts: TraceOptions) => MaybePromise
+  error?: (this: PluginContext, opts: TraceOptions) => MaybePromise
 }
 
 export type Plugin<PluginName extends string = string> = {
   name: PluginName
-  load: () => MaybePromise
-  unload?: () => MaybePromise
 } & PluginHooks
 
-export type InitializedPlugin<
-  PluginName extends string = string
-> = Plugin<PluginName> & {
-  context: {
-    loaded?: boolean
-    loadPromise?: Promise<unknown>
-  }
+export type InitializedPlugin<PluginName extends string = string> = {
+  name: PluginName
+  hooks: PluginHooks
+  loaded: boolean
+  loadPromise?: Promise<unknown>
 }
 
-export type SharedContext = {
-  meta: {
-    env?: string
-    appVersion?: string
-    debug?: boolean
-  }
+export type ConfigContext = {
+  env?: string
+  appVersion?: string
+  debug?: boolean
+}
+
+export type PluginContext = {
+  config: ConfigContext
+  /** Asserts that an object has received certain props */
+  assertKeys: <T extends GenericObject>(value: T, props: Array<keyof T>) => void
+  /** Asserts that every passed value is truthy */
+  assertValues: (values: GenericObject) => void
 }
 
 export type AnalyticsWrapperOptions<PluginName extends string> = {
@@ -64,6 +73,6 @@ export type AnalyticsWrapperOptions<PluginName extends string> = {
   debug?: boolean
   trackWhenEnv?: string
   explicitUse?: {
-    [key in keyof PluginHooks]: PluginName[]
+    [key in keyof Omit<PluginHooks, 'load' | 'unload'>]: PluginName[]
   }
 }
