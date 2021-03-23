@@ -1,8 +1,7 @@
 import type {
-  SharedContext,
+  PluginContext,
   PageviewOptions,
   IdentifyOptions,
-  TrackEventOptions,
 } from '../../types'
 import { addHelpscoutScript } from './script'
 
@@ -31,7 +30,12 @@ const helpscout = ({ apiKey }: Options) => {
   //   return window.Beacon('event', { name: label, options });
   // }
 
-  function pageview({ page, title, location }: PageviewOptions) {
+  function pageview(
+    this: PluginContext,
+    { page, title, location }: PageviewOptions,
+  ) {
+    this.assertValues({ page, title })
+
     window.Beacon('suggest')
     window.Beacon('event', {
       path: page,
@@ -41,11 +45,21 @@ const helpscout = ({ apiKey }: Options) => {
     })
   }
 
-  function identify(this: SharedContext, userInfo: IdentifyOptions) {
+  function identify(this: PluginContext, userInfo: IdentifyOptions) {
+    this.assertKeys(userInfo, [
+      'uid',
+      'id',
+      'name',
+      'fullName',
+      'email',
+      'phone',
+      'distinctId',
+    ])
+
     window.Beacon('identify', userInfo)
     window.Beacon('session-data', {
-      releaseStage: this.meta.env,
-      appVersion: this.meta.appVersion,
+      releaseStage: this.config.env,
+      appVersion: this.config.appVersion,
     })
   }
 

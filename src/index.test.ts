@@ -1,5 +1,5 @@
 import { Analytics } from './index'
-import type { Plugin, SharedContext } from './types'
+import type { GenericObject, Plugin, PluginContext } from './types'
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 function getMockPlugin<Name extends string = string>({
@@ -39,15 +39,15 @@ describe('loading and unloading', () => {
       ],
     })
 
-    expect(analytics.plugins.sampleService1.context.loaded).toBe(false)
-    expect(analytics.plugins.sampleService2.context.loaded).toBe(false)
+    expect(analytics.plugins.sampleService1.loaded).toBe(false)
+    expect(analytics.plugins.sampleService2.loaded).toBe(false)
 
     await analytics.loadServices()
 
-    expect(analytics.plugins.sampleService1.load).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.sampleService2.load).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.sampleService1.context.loaded).toBe(true)
-    expect(analytics.plugins.sampleService2.context.loaded).toBe(true)
+    expect(analytics.plugins.sampleService1.hooks.load).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.sampleService2.hooks.load).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.sampleService1.loaded).toBe(true)
+    expect(analytics.plugins.sampleService2.loaded).toBe(true)
   })
 
   it('lazily initialize plugins that implement the executed hook', async () => {
@@ -61,16 +61,16 @@ describe('loading and unloading', () => {
 
     await analytics.event({ label: 'click' })
 
-    expect(analytics.plugins.identifyService.context.loaded).toBe(false)
-    expect(analytics.plugins.pageviewService.context.loaded).toBe(false)
-    expect(analytics.plugins.eventService.context.loaded).toBe(true)
+    expect(analytics.plugins.identifyService.loaded).toBe(false)
+    expect(analytics.plugins.pageviewService.loaded).toBe(false)
+    expect(analytics.plugins.eventService.loaded).toBe(true)
 
     await analytics.identify({})
-    expect(analytics.plugins.identifyService.context.loaded).toBe(true)
-    expect(analytics.plugins.pageviewService.context.loaded).toBe(false)
+    expect(analytics.plugins.identifyService.loaded).toBe(true)
+    expect(analytics.plugins.pageviewService.loaded).toBe(false)
 
     await analytics.pageview()
-    expect(analytics.plugins.pageviewService.context.loaded).toBe(true)
+    expect(analytics.plugins.pageviewService.loaded).toBe(true)
   })
 
   it('unload all services', async () => {
@@ -83,15 +83,19 @@ describe('loading and unloading', () => {
 
     await analytics.loadServices()
 
-    expect(analytics.plugins.sampleService1.context.loaded).toBe(true)
-    expect(analytics.plugins.sampleService2.context.loaded).toBe(true)
+    expect(analytics.plugins.sampleService1.loaded).toBe(true)
+    expect(analytics.plugins.sampleService2.loaded).toBe(true)
 
     await analytics.unloadServices()
 
-    expect(analytics.plugins.sampleService1.unload).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.sampleService2.unload).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.sampleService1.context.loaded).toBe(false)
-    expect(analytics.plugins.sampleService2.context.loaded).toBe(false)
+    expect(analytics.plugins.sampleService1.hooks.unload).toHaveBeenCalledTimes(
+      1,
+    )
+    expect(analytics.plugins.sampleService2.hooks.unload).toHaveBeenCalledTimes(
+      1,
+    )
+    expect(analytics.plugins.sampleService1.loaded).toBe(false)
+    expect(analytics.plugins.sampleService2.loaded).toBe(false)
   })
 })
 
@@ -106,10 +110,10 @@ describe('plugin hooks', () => {
 
     await analytics.event({ label: 'click' })
 
-    expect(analytics.plugins.sampleService1.event).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService1.hooks.event).toHaveBeenCalledWith({
       label: 'click',
     })
-    expect(analytics.plugins.sampleService2.event).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService2.hooks.event).toHaveBeenCalledWith({
       label: 'click',
     })
   })
@@ -125,10 +129,14 @@ describe('plugin hooks', () => {
     analytics.loadServices()
     await analytics.pageview()
 
-    expect(analytics.plugins.sampleService1.pageview).toHaveBeenCalledWith({
+    expect(
+      analytics.plugins.sampleService1.hooks.pageview,
+    ).toHaveBeenCalledWith({
       page: '/',
     })
-    expect(analytics.plugins.sampleService2.pageview).toHaveBeenCalledWith({
+    expect(
+      analytics.plugins.sampleService2.hooks.pageview,
+    ).toHaveBeenCalledWith({
       page: '/',
     })
   })
@@ -143,10 +151,14 @@ describe('plugin hooks', () => {
 
     await analytics.pageview({ page: '/potato' })
 
-    expect(analytics.plugins.sampleService1.pageview).toHaveBeenCalledWith({
+    expect(
+      analytics.plugins.sampleService1.hooks.pageview,
+    ).toHaveBeenCalledWith({
       page: '/potato',
     })
-    expect(analytics.plugins.sampleService2.pageview).toHaveBeenCalledWith({
+    expect(
+      analytics.plugins.sampleService2.hooks.pageview,
+    ).toHaveBeenCalledWith({
       page: '/potato',
     })
   })
@@ -160,14 +172,18 @@ describe('plugin hooks', () => {
     })
 
     await analytics.identify({
-      userId: 'potato',
+      id: 'potato',
     })
 
-    expect(analytics.plugins.sampleService1.identify).toHaveBeenCalledWith({
-      userId: 'potato',
+    expect(
+      analytics.plugins.sampleService1.hooks.identify,
+    ).toHaveBeenCalledWith({
+      id: 'potato',
     })
-    expect(analytics.plugins.sampleService2.identify).toHaveBeenCalledWith({
-      userId: 'potato',
+    expect(
+      analytics.plugins.sampleService2.hooks.identify,
+    ).toHaveBeenCalledWith({
+      id: 'potato',
     })
   })
 
@@ -181,8 +197,8 @@ describe('plugin hooks', () => {
 
     await analytics.anonymize()
 
-    expect(analytics.plugins.sampleService1.anonymize).toHaveBeenCalled()
-    expect(analytics.plugins.sampleService2.anonymize).toHaveBeenCalled()
+    expect(analytics.plugins.sampleService1.hooks.anonymize).toHaveBeenCalled()
+    expect(analytics.plugins.sampleService2.hooks.anonymize).toHaveBeenCalled()
   })
 
   it('runs "error" hook of supported plugins', async () => {
@@ -195,10 +211,10 @@ describe('plugin hooks', () => {
 
     await analytics.error({ message: 'Some error' })
 
-    expect(analytics.plugins.sampleService1.error).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService1.hooks.error).toHaveBeenCalledWith({
       message: 'Some error',
     })
-    expect(analytics.plugins.sampleService2.error).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService2.hooks.error).toHaveBeenCalledWith({
       message: 'Some error',
     })
   })
@@ -213,10 +229,10 @@ describe('plugin hooks', () => {
 
     await analytics.warn({ message: 'Some warning' })
 
-    expect(analytics.plugins.sampleService1.warn).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService1.hooks.warn).toHaveBeenCalledWith({
       message: 'Some warning',
     })
-    expect(analytics.plugins.sampleService2.warn).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService2.hooks.warn).toHaveBeenCalledWith({
       message: 'Some warning',
     })
   })
@@ -229,12 +245,12 @@ describe('plugin hooks', () => {
       ],
     })
 
-    await analytics.warn({ message: 'Some info' })
+    await analytics.info({ message: 'Some info' })
 
-    expect(analytics.plugins.sampleService1.warn).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService1.hooks.info).toHaveBeenCalledWith({
       message: 'Some info',
     })
-    expect(analytics.plugins.sampleService2.warn).toHaveBeenCalledWith({
+    expect(analytics.plugins.sampleService2.hooks.info).toHaveBeenCalledWith({
       message: 'Some info',
     })
   })
@@ -252,17 +268,17 @@ describe('plugin hooks', () => {
     await analytics.pageview(null, { exclude: ['pageview'] })
     await analytics.identify({}, { exclude: ['identify'] })
 
-    expect(analytics.plugins.event.event).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.identify.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.event.hooks.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.hooks.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.hooks.event).toHaveBeenCalledTimes(1)
 
-    expect(analytics.plugins.event.pageview).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.pageview.pageview).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.identify.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.event.hooks.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.hooks.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.hooks.pageview).toHaveBeenCalledTimes(1)
 
-    expect(analytics.plugins.event.identify).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.pageview.identify).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.event.hooks.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.hooks.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.hooks.identify).toHaveBeenCalledTimes(0)
   })
 
   it('only runs hook of included plugins', async () => {
@@ -278,17 +294,17 @@ describe('plugin hooks', () => {
     await analytics.pageview(null, { include: ['pageview'] })
     await analytics.identify({}, { include: ['identify'] })
 
-    expect(analytics.plugins.event.event).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.identify.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.event.hooks.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.hooks.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.hooks.event).toHaveBeenCalledTimes(0)
 
-    expect(analytics.plugins.event.pageview).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.pageview.pageview).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.identify.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.event.hooks.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.hooks.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.hooks.pageview).toHaveBeenCalledTimes(0)
 
-    expect(analytics.plugins.event.identify).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.pageview.identify).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.event.hooks.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.hooks.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.hooks.identify).toHaveBeenCalledTimes(1)
   })
 
   it('does not run service hook defined to be used only explicitly', async () => {
@@ -309,17 +325,17 @@ describe('plugin hooks', () => {
     await analytics.pageview(null)
     await analytics.identify({})
 
-    expect(analytics.plugins.event.event).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.identify.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.event.hooks.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.hooks.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.hooks.event).toHaveBeenCalledTimes(1)
 
-    expect(analytics.plugins.event.pageview).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.pageview.pageview).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.identify.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.event.hooks.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.hooks.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.hooks.pageview).toHaveBeenCalledTimes(1)
 
-    expect(analytics.plugins.event.identify).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.pageview.identify).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.event.hooks.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.hooks.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.hooks.identify).toHaveBeenCalledTimes(0)
   })
 
   it('runs explicitly defined service hook', async () => {
@@ -340,54 +356,144 @@ describe('plugin hooks', () => {
     await analytics.pageview(null, { include: ['pageview'] })
     await analytics.identify({}, { include: ['identify'] })
 
-    expect(analytics.plugins.event.event).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.pageview.event).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.identify.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.event.hooks.event).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.pageview.hooks.event).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.hooks.event).toHaveBeenCalledTimes(0)
 
-    expect(analytics.plugins.event.pageview).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.pageview.pageview).toHaveBeenCalledTimes(1)
-    expect(analytics.plugins.identify.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.event.hooks.pageview).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.hooks.pageview).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.identify.hooks.pageview).toHaveBeenCalledTimes(0)
 
-    expect(analytics.plugins.event.identify).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.pageview.identify).toHaveBeenCalledTimes(0)
-    expect(analytics.plugins.identify.identify).toHaveBeenCalledTimes(1)
+    expect(analytics.plugins.event.hooks.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.pageview.hooks.identify).toHaveBeenCalledTimes(0)
+    expect(analytics.plugins.identify.hooks.identify).toHaveBeenCalledTimes(1)
   })
 
-  it('passes shared context to hooks', async () => {
-    const plugin1 = {
-      name: 'plugin1',
-      load: jest.fn(),
-      pageview: jest.fn(function pageview1(this: SharedContext) {
-        return this
-      }),
-    }
+  describe('plugin "this" context', () => {
+    it('passes config context to all hooks', async () => {
+      const plugin1 = {
+        name: 'plugin1',
+        load: jest.fn(function load(this: PluginContext) {
+          return this
+        }),
+        unload: jest.fn(function unload(this: PluginContext) {
+          return this
+        }),
+        pageview: jest.fn(function pageview1(this: PluginContext) {
+          return this
+        }),
+      }
 
-    const plugin2 = {
-      name: 'plugin2',
-      load: jest.fn(),
-      pageview: jest.fn(function pageview2(this: SharedContext) {
-        return this
-      }),
-    }
+      const analytics = Analytics({
+        debug: false,
+        appVersion: '1.0.0',
+        plugins: [plugin1],
+      })
 
-    const analytics = Analytics({
-      debug: false,
-      appVersion: '1.0.0',
-      plugins: [plugin1, plugin2],
+      const expectedContext = {
+        config: { appVersion: '1.0.0', debug: false, env: undefined },
+      }
+
+      await analytics.loadServices()
+      await analytics.pageview()
+      await analytics.unloadServices()
+
+      expect(plugin1.load).toReturnWith(
+        expect.objectContaining(expectedContext),
+      )
+      expect(plugin1.unload).toReturnWith(
+        expect.objectContaining(expectedContext),
+      )
+      expect(plugin1.pageview).toReturnWith(
+        expect.objectContaining(expectedContext),
+      )
     })
 
-    const expectedContext = {
-      meta: { appVersion: '1.0.0', debug: false, env: undefined },
-    }
+    it('passes a "assertKeys" helper for each hook', async () => {
+      const assertSpy = jest
+        .spyOn(console, 'assert')
+        .mockImplementation(() => {})
 
-    await analytics.pageview()
+      const plugins = [
+        {
+          name: 'plugin1' as const,
+          load: jest.fn(),
+          identify(this: PluginContext, args: GenericObject) {
+            this.assertKeys(args, ['id'])
 
-    expect(plugin1.pageview).toReturnWith(
-      expect.objectContaining(expectedContext),
-    )
-    expect(plugin2.pageview).toReturnWith(
-      expect.objectContaining(expectedContext),
-    )
+            return this
+          },
+        },
+        {
+          name: 'plugin2' as const,
+          load: jest.fn(),
+          pageview(this: PluginContext, args: GenericObject) {
+            this.assertKeys(args, ['url', 'title'])
+
+            return this
+          },
+        },
+      ]
+
+      const analytics = Analytics({ plugins })
+
+      await analytics.identify({})
+      await analytics.pageview()
+
+      expect(assertSpy).toHaveBeenCalledWith(
+        false,
+        `[Analytics][plugin:"plugin1"] Hook "identify" requires the properties "id". Received "".`,
+      )
+      expect(assertSpy).toHaveBeenCalledWith(
+        false,
+        `[Analytics][plugin:"plugin2"] Hook "pageview" requires the properties "url, title". Received "page".`,
+      )
+
+      assertSpy.mockRestore()
+    })
+
+    it('passes a "assertValues" helper for each hook', async () => {
+      const assertSpy = jest
+        .spyOn(console, 'assert')
+        .mockImplementation(() => {})
+
+      const plugins = [
+        {
+          name: 'plugin1' as const,
+          load: jest.fn(),
+          identify(this: PluginContext, { id }: GenericObject) {
+            this.assertValues({ id })
+
+            return this
+          },
+        },
+        {
+          name: 'plugin2' as const,
+          load: jest.fn(),
+          pageview(this: PluginContext, { url, title }: GenericObject) {
+            this.assertValues({ url, title })
+
+            return this
+          },
+        },
+      ]
+
+      const analytics = Analytics({ plugins })
+
+      await analytics.identify({})
+      await analytics.pageview()
+
+      expect(assertSpy).toHaveBeenCalledWith(
+        false,
+        `[Analytics][plugin:"plugin1"] Hook "identify" requires defined values for "id" properties. Received "{}".`,
+      )
+      expect(assertSpy).toHaveBeenCalledWith(
+        false,
+        `[Analytics][plugin:"plugin2"] Hook "pageview" requires defined values for "url, title" properties. Received "{}".`,
+      )
+
+      assertSpy.mockRestore()
+    })
   })
 })
 
@@ -405,12 +511,16 @@ test('only runs actual tracking on environment defined in "trackWhenEnv"', async
 
   await analytics.event({ label: 'click' })
 
-  expect(analytics.plugins.sampleService1.event).not.toHaveBeenCalledWith({
-    label: 'click',
-  })
-  expect(analytics.plugins.sampleService2.event).not.toHaveBeenCalledWith({
-    label: 'click',
-  })
+  expect(analytics.plugins.sampleService1.hooks.event).not.toHaveBeenCalledWith(
+    {
+      label: 'click',
+    },
+  )
+  expect(analytics.plugins.sampleService2.hooks.event).not.toHaveBeenCalledWith(
+    {
+      label: 'click',
+    },
+  )
 
   analytics = Analytics({
     env: 'potato',
@@ -420,10 +530,10 @@ test('only runs actual tracking on environment defined in "trackWhenEnv"', async
 
   await analytics.event({ label: 'click' })
 
-  expect(analytics.plugins.sampleService1.event).toHaveBeenCalledWith({
+  expect(analytics.plugins.sampleService1.hooks.event).toHaveBeenCalledWith({
     label: 'click',
   })
-  expect(analytics.plugins.sampleService2.event).toHaveBeenCalledWith({
+  expect(analytics.plugins.sampleService2.hooks.event).toHaveBeenCalledWith({
     label: 'click',
   })
 })

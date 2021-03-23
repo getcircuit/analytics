@@ -1,4 +1,4 @@
-import type { SharedContext, IdentifyOptions } from '../../types'
+import type { PluginContext, IdentifyOptions } from '../../types'
 import { addAutoPilotScript } from './script'
 
 type Options = {
@@ -24,10 +24,10 @@ const autopilot = ({ apiKey }: Options) => {
   }
 
   function identify(
-    this: SharedContext,
+    this: PluginContext,
     { uid, email, phone, fullName, distinctId }: IdentifyOptions = {},
   ) {
-    // todo
+    this.assertValues({ uid, email, phone, fullName, distinctId })
 
     window.Autopilot.run('associate', {
       ...getNameProps(fullName),
@@ -36,7 +36,7 @@ const autopilot = ({ apiKey }: Options) => {
       Email: email,
       custom: {
         'string--Distinct--Id': distinctId,
-        'string--App--Version': this.meta.appVersion,
+        'string--App--Version': this.config.appVersion,
         'string--UID': uid,
       },
     })

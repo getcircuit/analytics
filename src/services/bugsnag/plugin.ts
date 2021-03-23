@@ -1,7 +1,7 @@
 import type { Client } from '@bugsnag/core'
 
 import type {
-  SharedContext,
+  PluginContext,
   IdentifyOptions,
   TrackEventOptions,
 } from '../../types'
@@ -15,13 +15,18 @@ const removeUndefinedProps = (o: unknown) => JSON.parse(JSON.stringify(o))
 const bugsnag = ({ client }: Options) => {
   let bugsnagClient: Client
 
-  async function load(this: SharedContext) {
+  async function load() {
     bugsnagClient = client
 
     return bugsnagClient
   }
 
-  function event({ label, ...options }: TrackEventOptions) {
+  function event(
+    this: PluginContext,
+    { label, ...options }: TrackEventOptions,
+  ) {
+    this.assertValues({ label })
+
     return bugsnagClient.leaveBreadcrumb(label, options)
   }
 
@@ -46,7 +51,9 @@ const bugsnag = ({ client }: Options) => {
     })
   }
 
-  function identify(userInfo: IdentifyOptions) {
+  function identify(this: PluginContext, userInfo: IdentifyOptions) {
+    this.assertKeys(userInfo, ['id', 'email', 'name'])
+
     const { id, email, name } = userInfo
 
     bugsnagClient.setUser(id, email, name)
