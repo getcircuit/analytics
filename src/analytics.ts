@@ -47,12 +47,10 @@ function Analytics<PluginName extends string>({
   // istanbul ignore next
   if (debug) {
     console.debug(
-      `[Analytics] Plugins: "${plugins.map((pl) => pl.name).join('", "')}"`,
-    )
-    console.debug(
-      `[Analytics] Env: ${env}. Tracking ${
-        shouldTrack ? 'enabled' : 'disabled'
-      }.`,
+      `[Analytics]\n` +
+        `Plugins: "${plugins.map((pl) => pl.name).join('", "')}"\n` +
+        `Env: "${env}"\n` +
+        `Tracking ${shouldTrack ? 'enabled' : 'disabled'}.`,
     )
   }
 
@@ -79,8 +77,7 @@ function Analytics<PluginName extends string>({
     // istanbul ignore next
     if (debug) {
       console.debug(
-        `Analytics hook: "${hook}"`,
-        `Args: ${JSON.stringify(args)}`,
+        `[Analytics]\nHook: "${hook}"\nArgs: ${JSON.stringify(args)}`,
       )
     }
 
