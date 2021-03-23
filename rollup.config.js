@@ -25,8 +25,7 @@ export default {
     commonjs(),
     babel({
       babelHelpers: 'bundled',
-      // We add the .svg extension so babel considers our transformed svg files
-      extensions: [...RESOLVABLE_EXTS, '.svg'],
+      extensions: RESOLVABLE_EXTS,
     }),
   ],
 }
