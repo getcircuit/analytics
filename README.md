@@ -75,3 +75,22 @@ A service plugin is just an object with a specific set of methods, which we call
 ```
 
 Apart from `load` and `unload`, each hook correspond to a method in the abstraction layer.
+
+### Hooks
+
+Every hook has access to a `this` object which contains:
+
+```ts
+type PluginContext = {
+  /** Configs passed onto the library */
+  config: {
+    env: string
+    appVersion: string
+    debug: boolean
+  }
+  /** Helper method to assert that an object has received certain props */
+  assertKeys: (object, requiredKeys) => void
+  /** Helper method to assert that every passed value is not undefined */
+  assertValues: (objectOfValues) => void
+}
+```
