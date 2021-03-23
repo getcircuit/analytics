@@ -47,7 +47,8 @@ function Analytics<PluginName extends string>({
   if (debug) {
     console.debug(
       [
-        `[Analytics]`,
+        '[Analytics]',
+        '',
         `Plugins: "${plugins.map((pl) => pl.name).join('", "')}"`,
         `Env: "${env}"`,
         `Tracking ${shouldTrack ? 'enabled' : 'disabled'}.`,
@@ -75,13 +76,19 @@ function Analytics<PluginName extends string>({
     args: unknown,
     { include, exclude }: TrackMethodOptions,
   ) {
+    const relevantPlugins = plugins.filter(
+      (plugin) => typeof plugin.hooks[hook] === 'function',
+    )
+
     // istanbul ignore next
     if (debug) {
       console.debug(
         [
-          `[Analytics]`,
+          '[Analytics]',
+          '',
           `Hook: "${hook}"`,
           `Args: ${JSON.stringify(args)}`,
+          `Plugins: "${relevantPlugins.map((pl) => pl.name).join('", "')}"`,
         ].join('\n'),
       )
     }
@@ -90,8 +97,7 @@ function Analytics<PluginName extends string>({
     if (shouldTrack === false) return
 
     return allSettled(
-      plugins.map(async (plugin) => {
-        if (typeof plugin.hooks[hook] !== 'function') return
+      relevantPlugins.map(async (plugin) => {
         if (include?.includes(plugin.name) === false) return
         if (exclude?.includes(plugin.name) === true) return
         if (
