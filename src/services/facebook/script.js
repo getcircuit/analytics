@@ -23,5 +23,5 @@ export function addFacebookScript({ pixelId }) {
     'https://connect.facebook.net/en_US/fbevents.js',
   )
 
-  window?.fbq('init', pixelId)
+  window.fbq('init', pixelId)
 }

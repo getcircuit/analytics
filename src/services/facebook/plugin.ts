@@ -28,13 +28,13 @@ const facebookPixel = ({ pixelId }: Options) => {
   ) {
     this.assertValues({ label })
 
-    window?.fbq('track', label, options)
+    window.fbq('track', label, options)
   }
 
   function pageview(this: PluginContext, args: PageviewOptions) {
     this.assertKeys(args, ['page'])
 
-    window?.fbq('track', 'PageView', args)
+    window.fbq('track', 'PageView', args)
   }
 
   function identify(this: PluginContext, args: IdentifyOptions) {
