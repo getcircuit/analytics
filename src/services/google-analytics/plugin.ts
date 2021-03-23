@@ -68,10 +68,10 @@ const googleAnalytics = ({ trackingId, debug }: Options) => {
     return gaSend({ hitType: 'pageview', page, location, title })
   }
 
-  function identify(this: PluginContext, { id }: IdentifyOptions) {
-    this.assertValues({ id })
+  function identify(this: PluginContext, { externalId }: IdentifyOptions) {
+    this.assertValues({ externalId })
 
-    window.ga('set', 'userId', id)
+    window.ga('set', 'userId', externalId)
   }
 
   function anonymize() {

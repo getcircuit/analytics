@@ -40,12 +40,11 @@ const facebookPixel = ({ pixelId }: Options) => {
   function identify(this: PluginContext, args: IdentifyOptions) {
     this.assertKeys(args, [
       'uid',
-      'id',
+      'externalId',
       'name',
       'fullName',
       'email',
       'phone',
-      'distinctId',
     ])
 
     window.fbq('trackCustom', 'identify', args)

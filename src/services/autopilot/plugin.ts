@@ -5,7 +5,7 @@ type Options = {
   apiKey: string
 }
 
-function getNameProps(fullName?: string) {
+function getNameProps(fullName?: string | null) {
   const nameParts = fullName?.split(' ')
 
   if (!nameParts) {
@@ -25,9 +25,9 @@ const autopilot = ({ apiKey }: Options) => {
 
   function identify(
     this: PluginContext,
-    { uid, email, phone, fullName, distinctId }: IdentifyOptions = {},
+    { uid, email, phone, fullName, externalId }: IdentifyOptions = {},
   ) {
-    this.assertValues({ uid, email, phone, fullName, distinctId })
+    this.assertValues({ uid, email, phone, fullName, externalId })
 
     window.Autopilot.run('associate', {
       ...getNameProps(fullName),
@@ -35,7 +35,7 @@ const autopilot = ({ apiKey }: Options) => {
       Phone: phone,
       Email: email,
       custom: {
-        'string--Distinct--Id': distinctId,
+        'string--Distinct--Id': externalId,
         'string--App--Version': this.config.appVersion,
         'string--UID': uid,
       },
