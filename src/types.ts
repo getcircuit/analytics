@@ -15,13 +15,12 @@ export type PageviewOptions = {
 
 export type IdentifyOptions = {
   uid?: string
-  id?: string
-  name?: string
-  fullName?: string
+  externalId?: string
   email?: string
-  phone?: string
-  distinctId?: string
-  displayName?: string
+  phone?: string | null
+  name?: string | null
+  fullName?: string | null
+  displayName?: string | null
 }
 
 export type TraceOptions = {

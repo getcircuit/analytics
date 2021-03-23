@@ -42,13 +42,13 @@ const fullstory = ({ org }: Options) => {
   }
 
   function identify(this: PluginContext, userInfo: IdentifyOptions = {}) {
-    this.assertKeys(userInfo, ['id'])
+    this.assertKeys(userInfo, ['externalId'])
 
-    const { id } = userInfo
+    const { externalId } = userInfo
 
-    if (id == null) return
-    window.FS.identify(id, userInfo)
-    startSession(id)
+    if (externalId == null) return
+    window.FS.identify(externalId, userInfo)
+    startSession(externalId)
   }
 
   function anonymize() {

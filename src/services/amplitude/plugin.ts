@@ -44,24 +44,21 @@ const amplitude = ({ apiKey }: Options) => {
     return sdk.logEvent('Pageview', options)
   }
 
-  function identify(
-    this: PluginContext,
-    { id, uid, phone, email, displayName }: IdentifyOptions,
-  ) {
-    this.assertValues({ id, uid, phone, email, displayName })
+  function identify(this: PluginContext, args: IdentifyOptions) {
+    this.assertKeys(args, [
+      'externalId',
+      'uid',
+      'phone',
+      'email',
+      'displayName',
+    ])
 
-    sdk.setUserId(id)
+    sdk.setUserId(args.externalId)
     if (this.config.appVersion) {
       sdk.setVersionName(this.config.appVersion)
     }
 
-    return trackAttributes({
-      id,
-      uid,
-      phone,
-      email,
-      displayName,
-    })
+    return trackAttributes(args)
   }
 
   function anonymize() {

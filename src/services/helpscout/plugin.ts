@@ -48,12 +48,11 @@ const helpscout = ({ apiKey }: Options) => {
   function identify(this: PluginContext, userInfo: IdentifyOptions) {
     this.assertKeys(userInfo, [
       'uid',
-      'id',
       'name',
       'fullName',
       'email',
       'phone',
-      'distinctId',
+      'externalId',
     ])
 
     window.Beacon('identify', userInfo)
