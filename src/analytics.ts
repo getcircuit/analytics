@@ -32,7 +32,6 @@ function Analytics<PluginName extends string>({
     env,
   }
 
-  // initiate all plugins with the current context
   const plugins = pluginImplementations.map(({ name, ...hooks }) => {
     const plugin = {
       name,
@@ -47,10 +46,12 @@ function Analytics<PluginName extends string>({
   // istanbul ignore next
   if (debug) {
     console.debug(
-      `[Analytics]\n` +
-        `Plugins: "${plugins.map((pl) => pl.name).join('", "')}"\n` +
-        `Env: "${env}"\n` +
+      [
+        `[Analytics]`,
+        `Plugins: "${plugins.map((pl) => pl.name).join('", "')}"`,
+        `Env: "${env}"`,
         `Tracking ${shouldTrack ? 'enabled' : 'disabled'}.`,
+      ].join('\n'),
     )
   }
 
@@ -77,7 +78,11 @@ function Analytics<PluginName extends string>({
     // istanbul ignore next
     if (debug) {
       console.debug(
-        `[Analytics]\nHook: "${hook}"\nArgs: ${JSON.stringify(args)}`,
+        [
+          `[Analytics]`,
+          `Hook: "${hook}"`,
+          `Args: ${JSON.stringify(args)}`,
+        ].join('\n'),
       )
     }
 
