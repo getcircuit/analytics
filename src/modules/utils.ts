@@ -3,7 +3,13 @@ import type { GenericObject, MaybePromise, PluginHooks } from '../types'
 /** Quick and dirty Promise.allSettle ponyfill */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function allSettled(promises: Array<MaybePromise<any>>) {
-  return Promise.all(promises.map((promise) => promise?.catch(() => undefined)))
+  return Promise.all(
+    promises.map((promise) =>
+      promise?.catch((e: Error) => {
+        console.error(`[Analytics] An error has occurred:\n`, e)
+      }),
+    ),
+  )
 }
 
 export function getHookAssertionHelpers(

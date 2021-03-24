@@ -58,13 +58,13 @@ const fullstory = ({ org }: Options) => {
   }
 
   function startSession(userId: string) {
-    const currentSessionUID = userId
+    const currentSessionId = userId
 
-    if (currentSessionUID == null) return
+    if (currentSessionId == null) return
 
-    const existingSessionUID = window.sessionStorage.getItem(FS_UID_KEY)
+    const existingSessionId = window.sessionStorage.getItem(FS_UID_KEY)
     const shouldSetNewSession =
-      existingSessionUID == null || existingSessionUID !== currentSessionUID
+      existingSessionId == null || existingSessionId !== currentSessionId
 
     if (shouldSetNewSession) {
       window.sessionStorage.setItem(
@@ -72,14 +72,14 @@ const fullstory = ({ org }: Options) => {
         window.FS.getCurrentSessionURL(),
       )
 
-      window.sessionStorage.setItem(FS_UID_KEY, currentSessionUID)
+      window.sessionStorage.setItem(FS_UID_KEY, currentSessionId)
 
-      if (!existingSessionUID) {
-        console.debug('=== Identified FullStory User ===\n', currentSessionUID)
+      if (!existingSessionId) {
+        console.debug('=== Identified FullStory User ===\n', currentSessionId)
       } else {
         window.FS.restart()
-        console.debug('=== Previous FullStory User ===\n', existingSessionUID)
-        console.debug('=== Identified FullStory User ===\n', currentSessionUID)
+        console.debug('=== Previous FullStory User ===\n', existingSessionId)
+        console.debug('=== Identified FullStory User ===\n', currentSessionId)
       }
     } else {
       const existingSessionUrl = window.sessionStorage.getItem(FS_SESSION_KEY)
