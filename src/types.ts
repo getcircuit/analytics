@@ -18,9 +18,7 @@ export type IdentifyOptions = {
   email?: string
   phone?: string | null
   name?: string | null
-  fullName?: string | null
-  displayName?: string | null
-  [key: string]: unknown
+  [key: string]: string | null | undefined
 }
 
 export type TraceOptions = {
