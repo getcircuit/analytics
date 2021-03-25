@@ -45,15 +45,9 @@ const amplitude = ({ apiKey }: Options) => {
   }
 
   function identify(this: PluginContext, args: IdentifyOptions) {
-    this.assertKeys(args, [
-      'externalId',
-      'uid',
-      'phone',
-      'email',
-      'displayName',
-    ])
+    this.assertKeys(args, ['id', 'phone', 'email', 'displayName', 'uid'])
 
-    sdk.setUserId(args.externalId)
+    sdk.setUserId(args.id)
     if (this.config.appVersion) {
       sdk.setVersionName(this.config.appVersion)
     }

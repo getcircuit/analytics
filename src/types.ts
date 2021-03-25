@@ -14,7 +14,7 @@ export type PageviewOptions = {
 }
 
 export type IdentifyOptions = {
-  externalId?: string
+  id?: string
   email?: string
   phone?: string | null
   name?: string | null

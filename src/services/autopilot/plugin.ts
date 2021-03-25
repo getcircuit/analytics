@@ -25,9 +25,9 @@ const autopilot = ({ apiKey }: Options) => {
 
   function identify(
     this: PluginContext,
-    { uid, email, phone, fullName, externalId }: IdentifyOptions = {},
+    { uid, email, phone, fullName, id }: IdentifyOptions = {},
   ) {
-    this.assertValues({ uid, email, phone, fullName, externalId })
+    this.assertValues({ uid, email, phone, fullName, id })
 
     window.Autopilot.run('associate', {
       ...getNameProps(fullName),
@@ -35,7 +35,7 @@ const autopilot = ({ apiKey }: Options) => {
       Phone: phone,
       Email: email,
       custom: {
-        'string--Distinct--Id': externalId,
+        'string--Distinct--Id': id,
         'string--App--Version': this.config.appVersion,
         'string--UID': uid,
       },

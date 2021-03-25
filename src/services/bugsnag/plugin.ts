@@ -52,11 +52,11 @@ const bugsnag = ({ client }: Options) => {
   }
 
   function identify(this: PluginContext, userInfo: IdentifyOptions) {
-    this.assertKeys(userInfo, ['externalId', 'email', 'name'])
+    this.assertKeys(userInfo, ['id', 'email', 'name'])
 
-    const { externalId, email, name } = userInfo
+    const { id, email, name } = userInfo
 
-    bugsnagClient.setUser(externalId, email, name ?? undefined)
+    bugsnagClient.setUser(id, email, name ?? undefined)
     bugsnagClient.addMetadata('user', userInfo)
   }
 
