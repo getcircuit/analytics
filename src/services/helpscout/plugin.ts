@@ -30,15 +30,20 @@ const helpscout = ({ apiKey }: Options) => {
   //   return window.Beacon('event', { name: label, options });
   // }
 
-  function pageview(this: PluginContext, { title, location }: PageviewOptions) {
+  function pageview(
+    this: PluginContext,
+    { title, location, page }: PageviewOptions,
+  ) {
+    console.log({ title, location })
     this.assertValues({ title, location })
 
-    window.Beacon('suggest')
     window.Beacon('event', {
       type: 'page-viewed',
       url: location,
-      title,
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+      title: title || page || location,
     })
+    window.Beacon('suggest')
   }
 
   function identify(this: PluginContext, userInfo: IdentifyOptions) {
