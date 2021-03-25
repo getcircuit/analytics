@@ -1,3 +1,12 @@
+## [0.0.20](https://github.com/getcircuit/analytics/compare/v0.0.19...v0.0.20) (2021-03-25)
+
+
+### Bug Fixes
+
+* add title fallback to helpscout plugin ([afc77af](https://github.com/getcircuit/analytics/commit/afc77afb76d9b1b2306b78710f567f8461563804))
+
+
+
 ## [0.0.19](https://github.com/getcircuit/analytics/compare/v0.0.18...v0.0.19) (2021-03-25)
 
 

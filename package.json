@@ -1,6 +1,6 @@
 {
   "name": "@getcircuit/analytics",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "main": "cjs/index.js",
   "module": "esm/index.js",
   "types": "types/index.d.ts",
