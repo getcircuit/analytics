@@ -20,24 +20,26 @@ export function getHookAssertionHelpers(
     record: T,
     props: Array<keyof T>,
   ) {
-    const requiredProps = props.join(', ')
-    const passedProps = Object.keys(record).join(', ')
+    if (props.some((prop) => !(prop in record))) {
+      const requiredProps = props.join(', ')
+      const passedProps = Object.keys(record).join(', ')
 
-    console.assert(
-      props.every((prop) => prop in record),
-      `[Analytics][plugin:"${pluginName}"] Hook "${hook}" requires the properties "${requiredProps}". Received "${passedProps}".`,
-    )
+      console.error(
+        `[Analytics][plugin:"${pluginName}"] Hook "${hook}" requires the properties "${requiredProps}". Received "${passedProps}".`,
+      )
+    }
   }
 
   function assertValues(values: GenericObject) {
-    const props = Object.keys(values).join(', ')
+    if (Object.values(values).some((value) => typeof value === 'undefined')) {
+      const props = Object.keys(values).join(', ')
 
-    console.assert(
-      Object.values(values).every((value) => typeof value !== 'undefined'),
-      `[Analytics][plugin:"${pluginName}"] Hook "${hook}" requires defined values for "${props}" properties. Received "${JSON.stringify(
-        values,
-      )}".`,
-    )
+      console.error(
+        `[Analytics][plugin:"${pluginName}"] Hook "${hook}" requires defined values for "${props}" properties. Received "${JSON.stringify(
+          values,
+        )}".`,
+      )
+    }
   }
 
   return {

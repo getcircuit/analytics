@@ -132,16 +132,20 @@ describe('plugin hooks', () => {
     expect(
       analytics.plugins.sampleService1.hooks.pageview,
     ).toHaveBeenCalledWith({
+      location: 'http://localhost/',
       page: '/',
+      title: '',
     })
     expect(
       analytics.plugins.sampleService2.hooks.pageview,
     ).toHaveBeenCalledWith({
+      location: 'http://localhost/',
       page: '/',
+      title: '',
     })
   })
 
-  it('runs "pageview" hook with overriden URL', async () => {
+  it('runs "pageview" hook with overriden args', async () => {
     const analytics = Analytics({
       plugins: [
         getMockPlugin({ name: 'sampleService1' }),
@@ -149,17 +153,25 @@ describe('plugin hooks', () => {
       ],
     })
 
-    await analytics.pageview({ page: '/potato' })
+    await analytics.pageview({
+      page: '/potato',
+      location: 'http://localhost/potato',
+      title: 'potato',
+    })
 
     expect(
       analytics.plugins.sampleService1.hooks.pageview,
     ).toHaveBeenCalledWith({
       page: '/potato',
+      location: 'http://localhost/potato',
+      title: 'potato',
     })
     expect(
       analytics.plugins.sampleService2.hooks.pageview,
     ).toHaveBeenCalledWith({
       page: '/potato',
+      location: 'http://localhost/potato',
+      title: 'potato',
     })
   })
 
@@ -410,9 +422,7 @@ describe('plugin hooks', () => {
     })
 
     it('passes a "assertKeys" helper for each hook', async () => {
-      const assertSpy = jest
-        .spyOn(console, 'assert')
-        .mockImplementation(() => {})
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
       const plugins = [
         {
@@ -440,21 +450,19 @@ describe('plugin hooks', () => {
       await analytics.identify({})
       await analytics.pageview()
 
-      expect(assertSpy).toHaveBeenCalledWith(
-        false,
+      expect(errorSpy).toHaveBeenCalledWith(
         `[Analytics][plugin:"plugin1"] Hook "identify" requires the properties "id". Received "".`,
       )
-      expect(assertSpy).toHaveBeenCalledWith(
-        false,
-        `[Analytics][plugin:"plugin2"] Hook "pageview" requires the properties "url, title". Received "page".`,
+      expect(errorSpy).toHaveBeenCalledWith(
+        `[Analytics][plugin:"plugin2"] Hook "pageview" requires the properties "url, title". Received "page, location, title".`,
       )
 
-      assertSpy.mockRestore()
+      errorSpy.mockRestore()
     })
 
     it('passes a "assertValues" helper for each hook', async () => {
       const assertSpy = jest
-        .spyOn(console, 'assert')
+        .spyOn(console, 'error')
         .mockImplementation(() => {})
 
       const plugins = [
@@ -484,12 +492,10 @@ describe('plugin hooks', () => {
       await analytics.pageview()
 
       expect(assertSpy).toHaveBeenCalledWith(
-        false,
         `[Analytics][plugin:"plugin1"] Hook "identify" requires defined values for "id" properties. Received "{}".`,
       )
       expect(assertSpy).toHaveBeenCalledWith(
-        false,
-        `[Analytics][plugin:"plugin2"] Hook "pageview" requires defined values for "url, title" properties. Received "{}".`,
+        '[Analytics][plugin:"plugin2"] Hook "pageview" requires defined values for "url, title" properties. Received "{"title":""}".',
       )
 
       assertSpy.mockRestore()

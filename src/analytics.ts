@@ -7,6 +7,7 @@ import type {
   InitializedPlugin,
   PluginHooks,
   IdentifyOptions,
+  GenericObject,
 } from './types'
 import { allSettled, getHookAssertionHelpers } from './modules/utils'
 
@@ -59,21 +60,22 @@ function Analytics<PluginName extends string>({
   function runPluginHook(
     plugin: InitializedPlugin,
     hook: keyof PluginHooks,
-    args?: unknown,
+    args?: GenericObject,
   ) {
     const pluginContext: PluginContext = {
       config: configContext,
       ...getHookAssertionHelpers(plugin.name, hook),
     }
 
+    // We do a shallow clone because a hook may change the object
     // @ts-expect-error - TS doesn't connect the passed args to the method we're executing
-    return plugin.hooks[hook]?.call(pluginContext, args)
+    return plugin.hooks[hook]?.call(pluginContext, { ...args })
   }
 
   /** Execute a hook in all supported plugins */
   function runHook<Hook extends keyof Omit<PluginHooks, 'load' | 'unload'>>(
     hook: Hook,
-    args: unknown,
+    args: GenericObject | undefined,
     { include, exclude }: TrackMethodOptions,
   ) {
     const relevantPlugins = plugins.filter(
@@ -127,6 +129,8 @@ function Analytics<PluginName extends string>({
   ) {
     const pageviewArgs = {
       page: document.location.pathname,
+      location: document.location.href,
+      title: document.title,
       ...args,
     }
 
