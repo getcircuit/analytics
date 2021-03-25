@@ -1,3 +1,12 @@
+## [0.0.17](https://github.com/getcircuit/analytics/compare/v0.0.16...v0.0.17) (2021-03-25)
+
+
+### Features
+
+* make identify options accept any prop ([397992c](https://github.com/getcircuit/analytics/commit/397992cd99a2e36f4215c5bc1a4a57599d3fd670))
+
+
+
 ## [0.0.16](https://github.com/getcircuit/analytics/compare/v0.0.15...v0.0.16) (2021-03-23)
 
 
