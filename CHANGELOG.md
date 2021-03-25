@@ -1,3 +1,12 @@
+## [0.0.19](https://github.com/getcircuit/analytics/compare/v0.0.18...v0.0.19) (2021-03-25)
+
+
+### Bug Fixes
+
+* prevent one hook from modifying the passed object of another ([68da0a4](https://github.com/getcircuit/analytics/commit/68da0a4a32c13cd60425bc9f4337631854dae8e8))
+
+
+
 ## [0.0.18](https://github.com/getcircuit/analytics/compare/v0.0.17...v0.0.18) (2021-03-25)
 
 
