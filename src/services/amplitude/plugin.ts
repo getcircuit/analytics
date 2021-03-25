@@ -16,7 +16,7 @@ const amplitude = ({ apiKey }: Options) => {
 
   function load() {
     addAmplitudeScript({ apiKey })
-    sdk = window.amplitude.getsdk()
+    sdk = window.amplitude.getInstance()
     sdk.init(apiKey)
   }
 

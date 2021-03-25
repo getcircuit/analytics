@@ -30,18 +30,14 @@ const helpscout = ({ apiKey }: Options) => {
   //   return window.Beacon('event', { name: label, options });
   // }
 
-  function pageview(
-    this: PluginContext,
-    { page, title, location }: PageviewOptions,
-  ) {
-    this.assertValues({ page, title })
+  function pageview(this: PluginContext, { title, location }: PageviewOptions) {
+    this.assertValues({ title, location })
 
     window.Beacon('suggest')
     window.Beacon('event', {
-      path: page,
-      title,
       type: 'page-viewed',
-      url: location ?? document.location.href,
+      url: location,
+      title,
     })
   }
 
