@@ -1,3 +1,28 @@
+## 0.0.22 (2021-03-30)
+
+
+### Bug Fixes
+
+* 🐛 fix plugin list of debug message ([9dc5c84](https://github.com/getcircuit/analytics/commit/9dc5c84ba8a25ed6181410d1f0ee86177cb471bb))
+* add title fallback to helpscout plugin ([5a06bf9](https://github.com/getcircuit/analytics/commit/5a06bf9bc14a365d442bf2cc66ef2d40ed994123))
+* pass appversion to amplitude plugin ([ed78bd2](https://github.com/getcircuit/analytics/commit/ed78bd2d290276993a1c9002ce390084d011285c))
+* prevent one hook from modifying the passed object of another ([3508a99](https://github.com/getcircuit/analytics/commit/3508a99d94e8b1b292620ca3f2aa3ae1638326be))
+* remove unneeded optional operators ([8df2607](https://github.com/getcircuit/analytics/commit/8df26072a5d7edb618f07de57404fe93a286d87e))
+
+
+### Features
+
+* add assertion helpers ([a353693](https://github.com/getcircuit/analytics/commit/a3536932ce4fb754d16552c051f11a7838664ff6))
+* add autopilot ([51f1530](https://github.com/getcircuit/analytics/commit/51f1530e4ee7812c86792bd7f58ffc7e03c2d947))
+* add bugsnag ([1e4c981](https://github.com/getcircuit/analytics/commit/1e4c9810c84259a704ba8edf2acc6a5406994803))
+* add explicitUse prop ([f7c085d](https://github.com/getcircuit/analytics/commit/f7c085d06eb5f93835be9e83024e0ebbb8f86eb3))
+* add helpscout ([b72e634](https://github.com/getcircuit/analytics/commit/b72e6341032dfe4662226cb56c3aa4768b0ff0ae))
+* amplitude plugin ([9bd209d](https://github.com/getcircuit/analytics/commit/9bd209d1834560d9b534d1f7925affed275921e4))
+* make identify options accept any prop ([750b5d1](https://github.com/getcircuit/analytics/commit/750b5d19cdb3e9400b33dc53d3e8ec2b1ae34c26))
+* pass context to plugins ([6e45b19](https://github.com/getcircuit/analytics/commit/6e45b19993265e41a6104ed2e9e0ff65c6ac36cc))
+
+
+
 ## [0.0.20](https://github.com/getcircuit/analytics/compare/v0.0.19...v0.0.20) (2021-03-25)
 
 
