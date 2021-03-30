@@ -78,9 +78,22 @@ function Analytics<PluginName extends string>({
     args: GenericObject | undefined,
     { include, exclude }: TrackMethodOptions,
   ) {
-    const relevantPlugins = plugins.filter(
-      (plugin) => typeof plugin.hooks[hook] === 'function',
-    )
+    const relevantPlugins = plugins.filter((plugin) => {
+      if (include?.includes(plugin.name) === false) return false
+      if (exclude?.includes(plugin.name) === true) return false
+      if (
+        explicitUse?.[hook]?.includes(plugin.name) &&
+        !include?.includes(plugin.name)
+      ) {
+        return false
+      }
+
+      if (typeof plugin.hooks[hook] === 'function') {
+        return true
+      }
+
+      return false
+    })
 
     // istanbul ignore next
     if (debug) {
@@ -100,15 +113,6 @@ function Analytics<PluginName extends string>({
 
     return allSettled(
       relevantPlugins.map(async (plugin) => {
-        if (include?.includes(plugin.name) === false) return
-        if (exclude?.includes(plugin.name) === true) return
-        if (
-          explicitUse?.[hook]?.includes(plugin.name) &&
-          !include?.includes(plugin.name)
-        ) {
-          return
-        }
-
         if (!plugin.loaded) await loadService(plugin)
 
         return runPluginHook(plugin, hook, args)
