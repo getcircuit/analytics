@@ -76,6 +76,16 @@ A service plugin is just an object with a specific set of methods, which we call
 
 Apart from `load` and `unload`, each hook correspond to a method in the abstraction layer.
 
+### Available plugins
+
+- Amplitude
+- Autopilot
+- Bugsnag
+- Facebook Pixel
+- Fullstory
+- Google Analytics
+- Helpscout
+
 ### Hooks
 
 Every hook has access to a `this` object which contains:
