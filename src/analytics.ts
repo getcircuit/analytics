@@ -20,13 +20,13 @@ function Analytics<PluginName extends string>({
   debug,
   appVersion,
   env,
-  trackWhenEnv = 'production',
+  dryRun,
   explicitUse,
   plugins: pluginImplementations,
 }: AnalyticsWrapperOptions<PluginName>) {
   type PluginNames = PluginName[]
 
-  const shouldTrack = env == null || env === trackWhenEnv
+  const shouldTrack = !dryRun
   const configContext = {
     debug,
     appVersion,

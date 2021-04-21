@@ -18,8 +18,8 @@ export const analytics = Analytics({
   env: process.env.NODE_ENV,
   /** If true, logs every track call that is being made. (default: false) */
   debug: process.env.NODE_ENV === 'development',
-  /** Environment (env) to send actual tracking requests. (default: production) */
-  trackWhenEnv: 'production',
+  /** If true, tracking requests are not sent */
+  dryRun: 'production',
   /** List of service plugins */
   plugins: [
     googleAnalytics({

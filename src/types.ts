@@ -68,7 +68,7 @@ export type AnalyticsWrapperOptions<PluginName extends string> = {
   appVersion?: string
   plugins: Array<Plugin<PluginName>>
   debug?: boolean
-  trackWhenEnv?: string
+  dryRun?: boolean
   explicitUse?: {
     [key in keyof Omit<PluginHooks, 'load' | 'unload'>]: PluginName[]
   }

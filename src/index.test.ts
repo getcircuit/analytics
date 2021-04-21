@@ -503,15 +503,14 @@ describe('plugin hooks', () => {
   })
 })
 
-test('only runs actual tracking on environment defined in "trackWhenEnv"', async () => {
+test('do not run hooks if dryRun is true', async () => {
   const plugins = [
     getMockPlugin({ name: 'sampleService1' }),
     getMockPlugin({ name: 'sampleService2' }),
   ]
 
   let analytics = Analytics({
-    env: 'not-potato',
-    trackWhenEnv: 'potato',
+    dryRun: true,
     plugins,
   })
 
@@ -529,8 +528,7 @@ test('only runs actual tracking on environment defined in "trackWhenEnv"', async
   )
 
   analytics = Analytics({
-    env: 'potato',
-    trackWhenEnv: 'potato',
+    dryRun: false,
     plugins,
   })
 
