@@ -1,3 +1,17 @@
+# [1.0.0](https://github.com/getcircuit/analytics/compare/v0.0.22...v1.0.0) (2021-04-21)
+
+
+### Code Refactoring
+
+* 💡 change trackWhenEnv to dryRun ([b95a089](https://github.com/getcircuit/analytics/commit/b95a089026d1d6a8424770e1ad9f214e2eb62e0e))
+
+
+### BREAKING CHANGES
+
+* 🧨 Replaces the trackWhenEnv prop
+
+
+
 ## 0.0.22 (2021-03-30)
 
 ### Bug Fixes
