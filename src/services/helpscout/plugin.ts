@@ -34,7 +34,6 @@ const helpscout = ({ apiKey }: Options) => {
     this: PluginContext,
     { title, location, page }: PageviewOptions,
   ) {
-    console.log({ title, location })
     this.assertValues({ title, location })
 
     window.Beacon('event', {
