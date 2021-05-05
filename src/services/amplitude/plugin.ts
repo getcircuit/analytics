@@ -12,18 +12,16 @@ type Options = {
 
 const amplitude = ({ apiKey }: Options) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let sdk: any
 
   function load() {
     addAmplitudeScript({ apiKey })
-    sdk = window.amplitude.getInstance()
-    sdk.init(apiKey)
+
+    window.amplitude.getInstance().init(apiKey)
   }
 
   function unload() {
     document.querySelector('script[src*="cdn.amplitude.com"]')?.remove()
     delete window.amplitude
-    sdk = undefined
   }
 
   function event(
@@ -32,7 +30,7 @@ const amplitude = ({ apiKey }: Options) => {
   ) {
     this.assertValues({ label })
 
-    return sdk.logEvent(label, options)
+    return window.amplitude.getInstance().logEvent(label, options)
   }
 
   function pageview(
@@ -41,27 +39,27 @@ const amplitude = ({ apiKey }: Options) => {
   ) {
     this.assertValues({ page })
 
-    return sdk.logEvent('Pageview', options)
+    return window.amplitude.getInstance().logEvent('Pageview', options)
   }
 
   function identify(this: PluginContext, args: IdentifyOptions) {
     this.assertKeys(args, ['id', 'phone', 'email', 'displayName', 'uid'])
 
-    sdk.setUserId(args.id)
+    window.amplitude.getInstance().setUserId(args.id)
     if (this.config.appVersion) {
-      sdk.setVersionName(this.config.appVersion)
+      window.amplitude.getInstance().setVersionName(this.config.appVersion)
     }
 
     return trackAttributes(args)
   }
 
   function anonymize() {
-    sdk.setUserId(null)
-    sdk.regenerateDeviceId()
+    window.amplitude.getInstance().setUserId(null)
+    window.amplitude.getInstance().regenerateDeviceId()
   }
 
   function trackAttributes(userAttributes: IdentifyOptions) {
-    return sdk.setUserProperties(userAttributes)
+    return window.amplitude.getInstance().setUserProperties(userAttributes)
   }
 
   return {
