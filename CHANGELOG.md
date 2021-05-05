@@ -1,3 +1,12 @@
+## [1.0.3](https://github.com/getcircuit/analytics/compare/v1.0.2...v1.0.3) (2021-05-05)
+
+
+### Bug Fixes
+
+* amplitude not sending requests ([f9fe8bd](https://github.com/getcircuit/analytics/commit/f9fe8bdb63aff54e3c90469bdefdfd834731c097))
+
+
+
 ## [1.0.2](https://github.com/getcircuit/analytics/compare/v1.0.1...v1.0.2) (2021-05-05)
 
 
