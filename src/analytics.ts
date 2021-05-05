@@ -109,7 +109,7 @@ function Analytics<PluginName extends string>({
     }
 
     // istanbul ignore next
-    if (shouldTrack === false) return
+    if (shouldTrack === false) return Promise.resolve()
 
     return allSettled(
       relevantPlugins.map(async (plugin) => {
