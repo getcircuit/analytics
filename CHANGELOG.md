@@ -1,3 +1,12 @@
+## [1.0.2](https://github.com/getcircuit/analytics/compare/v1.0.1...v1.0.2) (2021-05-05)
+
+
+### Bug Fixes
+
+* prevent running hooks on SSR ([ce54c59](https://github.com/getcircuit/analytics/commit/ce54c59bbebf74bf915e7fbfabe46cf5bef4714e))
+
+
+
 ## [1.0.1](https://github.com/getcircuit/analytics/compare/v1.0.0...v1.0.1) (2021-05-05)
 
 
