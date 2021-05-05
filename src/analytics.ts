@@ -10,6 +10,7 @@ import type {
   GenericObject,
 } from './types'
 import { allSettled, getHookAssertionHelpers } from './modules/utils'
+import { isBrowser } from './modules/isBrowser'
 
 type TrackMethodOptions<Plugins = string[]> = {
   include?: Plugins
@@ -78,6 +79,9 @@ function Analytics<PluginName extends string>({
     args: GenericObject | undefined,
     { include, exclude }: TrackMethodOptions,
   ) {
+    // no ssr-support
+    if (!isBrowser) return Promise.resolve()
+
     const relevantPlugins = plugins.filter((plugin) => {
       if (include?.includes(plugin.name) === false) return false
       if (exclude?.includes(plugin.name) === true) return false
