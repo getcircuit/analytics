@@ -7,4 +7,5 @@ interface Window {
   Autopilot?: any
   amplitude?: any
   Beacon?: any
+  Intercom?: any
 }

@@ -85,6 +85,7 @@ Apart from `load` and `unload`, each hook correspond to a method in the abstract
 - Fullstory
 - Google Analytics
 - Helpscout
+- Intercom
 
 ### Hooks
 
