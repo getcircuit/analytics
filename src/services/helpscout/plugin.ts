@@ -16,10 +16,9 @@ const helpscout = ({ apiKey }: Options) => {
   }
 
   function unload() {
-    document.querySelector('script[src*="fbevents"]')?.remove()
+    document.querySelector('script[src*="helpscout.net"]')?.remove()
 
-    delete window.fbq
-    delete window._fbq
+    delete window.Beacon
   }
 
   // @TODO Not supported yet by Beacon SDK
@@ -34,7 +33,6 @@ const helpscout = ({ apiKey }: Options) => {
     this: PluginContext,
     { title, location, page }: PageviewOptions,
   ) {
-    console.log({ title, location })
     this.assertValues({ title, location })
 
     window.Beacon('event', {
