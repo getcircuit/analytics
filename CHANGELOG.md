@@ -1,3 +1,18 @@
+# [1.1.0](https://github.com/getcircuit/analytics/compare/v1.0.2...v1.1.0) (2021-06-08)
+
+
+### Bug Fixes
+
+* 🐛 unload of Helpscout ([a4f5d5c](https://github.com/getcircuit/analytics/commit/a4f5d5cfb643d8810a6dfb73646e07ddce9084c9))
+* amplitude not sending requests ([da9d7cb](https://github.com/getcircuit/analytics/commit/da9d7cb3ebcd2b3a60070b91da46582be3b319cc))
+
+
+### Features
+
+* 🎸 add Intercom ([52625d1](https://github.com/getcircuit/analytics/commit/52625d1771f1bc5bde603d4c8b31d9ad15b5d076))
+
+
+
 ## [1.0.4](https://github.com/getcircuit/analytics/compare/v1.0.3...v1.0.4) (2021-05-05)
 
 
