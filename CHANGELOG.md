@@ -1,3 +1,12 @@
+## [1.1.1](https://github.com/getcircuit/analytics/compare/v1.1.0...v1.1.1) (2021-06-10)
+
+
+### Bug Fixes
+
+* intercom script not being loaded ([6962f80](https://github.com/getcircuit/analytics/commit/6962f8002c61b96d3522eaac3caa9f3d6555d076))
+
+
+
 # [1.1.0](https://github.com/getcircuit/analytics/compare/v1.0.2...v1.1.0) (2021-06-08)
 
 
