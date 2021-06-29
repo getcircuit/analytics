@@ -36,21 +36,21 @@ const googleAnalytics = ({ trackingId, debug }: Options) => {
   function event(this: PluginContext, options: TrackEventOptions) {
     this.assertKeys(options, ['label'])
 
-    const gaEventProps: GenericObject = Object.entries(options).reduce(
+    const gaEventProps = Object.entries(options).reduce(
       (acc, [prop, value]) => {
         for (const key in options) {
           if (EVENT_KEYS.includes(prop)) {
             const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1)
 
-            gaEventProps[`event${capitalizedKey}`] = value
+            acc[`event${capitalizedKey}`] = value
           } else {
-            gaEventProps[key] = value
+            acc[key] = value
           }
         }
 
         return acc
       },
-      {},
+      {} as GenericObject,
     )
 
     return gaSend({
